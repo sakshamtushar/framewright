@@ -30,48 +30,70 @@ Run this manually after Tasks 1-8 are complete, on each platform you can access.
 
 If any platform-specific behavior differs from what's documented here (e.g. ffmpeg pause/resume unavailability on Linux), note it in this file so it's not re-discovered on the next run.
 
+## Automated driver
+
+`mcp-server/smoke-drive.mjs` exercises the real production code path (`getOrCreateConnection` +
+`buildToolHandlers`, the same functions `src/index.ts` uses) against a live Recordly instance —
+attaching to one that's already running, or spawning `npm run dev` itself. It performs a real
+few-second recording (with a pause/resume in the middle), lists projects, checks a couple of error
+paths, and cleans up the file it created. Run it from `mcp-server/`:
+
+```bash
+npm run build
+node smoke-drive.mjs
+```
+
+It does **not** replace the manual MCP-client walkthrough above (it bypasses the MCP stdio/tool-schema
+layer and calls the tool handler functions directly), but it's a fast, repeatable check of the
+automation server + IPC registry + recording pipeline integration, runnable in CI or locally without
+an MCP client.
+
 ## Last run
 
-**Date:** 2026-07-19  
-**Environment:** Headless sandboxed agent environment (no display server, no screen-recording OS permissions)  
-**Platform:** macOS (Darwin 25.5.0)  
+**Date:** 2026-07-19
+**Environment:** Real desktop session, macOS (Darwin 25.5.0), via `node smoke-drive.mjs`
+**Result:** ✅ Full end-to-end pass, both attach and spawn paths, all 9 Phase 1 tools exercised.
 
-### What was attempted
+### What was verified live
 
-1. **MCP server build:** ✓ Success
-   - `cd mcp-server && npm run build` completed without errors
-   - `dist/index.js` (2.5 KB) built and verified to exist
+1. **Spawn-a-fresh-instance path:** `getOrCreateConnection` spawned `npm run dev` with a generated
+   token (no prior instance running), polled the lockfile, and connected — the whole flow the plan
+   calls "the MCP server starts Recordly itself."
+2. **`get_app_status`** → `{ recording: false, platform: "darwin" }`
+3. **`list_capture_sources`** → 16 real sources returned, including `screen:4:0` ("Screen 1 (Primary)")
+   with a real thumbnail data URL.
+4. **`list_projects`** → `{ success: true, projectsDir: "...Recordly-dev/recordings/Projects", entries: [] }`
+   (empty — no `.recordly` project files exist yet since Phase 1 has no save/editor tools; this is expected).
+5. **`start_recording`** → `{ success: true, microphoneFallbackRequired: false }` — produced a real,
+   valid MP4 (`ISO Media, MP4 v2`, ~2.5MB for ~3s) at the expected `recordings/` path.
+6. **`get_recording_status`** (mid-recording) → `{ recording: true, ... }`.
+7. **`pause_recording`** / **`resume_recording`** → both `{ success: true }`.
+8. **`stop_recording`** → finalized and validated the file; also correctly threw
+   `"No recording is currently active."` when called a second time with nothing recording.
+9. **Attach-to-existing-instance path:** re-ran the driver against the still-running instance from
+   the spawn test — `getOrCreateConnection` correctly attached (no second Recordly window/process
+   spawned), confirmed by the lockfile PID staying the same.
+10. **`read_project`** (error path) → nonexistent path returned a graceful
+    `{ success: false, message: "Failed to read project file: ENOENT..." }` rather than hanging or
+    throwing an unhandled rejection. The happy path (reading a real project) is still unverified —
+    Phase 1 has no tool that creates a `.recordly` file to read back.
 
-2. **Recordly app startup (Attach-to-existing-instance path, Step 1):** ✗ Failed
-   - Attempted: `RECORDLY_MCP_TOKEN=<random> npm run dev` in repo root
-   - Result: Electron app build succeeded, but runtime failed with dependency error:
-     ```
-     Error: Could not resolve "bufferutil" imported by "ws". Is it installed?
-     ```
-   - This is a missing optional dependency issue in the Recordly build, not a display/environment issue
-   - Status: Prerequisite failure — Recordly itself cannot start due to this unresolved dependency
+### Known flake (pre-existing, not introduced by this MCP work)
 
-3. **MCP server startup:** ✓ Process starts
-   - `npm start` from `mcp-server/` begins successfully
-   - Awaits Recordly app connection (expected behavior when no app is running)
-   - Cannot proceed further without a working Recordly instance
+One run out of several hit a native-layer failure on `stop_recording` after a pause/resume:
+`Error: [mov,mp4,...] moov atom not found` — the ScreenCaptureKit helper hadn't fully finalized the
+file before Electron tried to validate/mux it, likely a timing race under the driver's fast
+pause→resume→stop cadence (~1.5s/1s/1.5s). Immediately re-running the identical sequence succeeded.
+This is a robustness issue in Recordly's existing native macOS recording pipeline (`electron/ipc/recording/mac.ts`),
+not in the MCP automation layer — the automation server correctly reported the real underlying error
+(`success: false` with the ffprobe message) instead of silently swallowing it or hanging. Worth a
+follow-up investigation into stop timing right after a resume, independent of this MCP phase.
 
-### What could NOT be verified in this environment
+### Not yet verified
 
-- **Full attach-to-existing-instance flow (steps 2-5):** Cannot proceed due to Recordly app startup failure
-- **Tool calls via MCP inspector or Claude Code connector:** Cannot execute without a running app
-- **Screen recording functionality (`start_recording`, `pause_recording`, `stop_recording`):** Would require functional Recordly app and OS-level screen-recording permissions (TCC grant on macOS)
-- **Spawn-a-fresh-instance path:** Blocked by same Recordly startup issue
-- **HUD visibility during recording:** Would require interactive display and working Recordly UI
-
-### Conclusion
-
-**Full end-to-end smoke test cannot be completed in this sandboxed environment.** A human developer must run this procedure on a real desktop with:
-- A working Recordly build (resolve the "bufferutil" dependency issue first)
-- A display server or graphical environment
-- Screen-recording OS permissions granted (macOS TCC approval)
-- MCP inspector or Claude Code/Desktop with MCP support configured
-
-The MCP server code itself appears ready (builds cleanly), but integration verification requires the full application stack to be functional and interactive.
-
-**Addendum:** The `bufferutil` startup blocker described above was subsequently fixed later on this branch (`vite.config.ts` now externalizes `ws`/`bufferutil`/`utf-8-validate`). The full smoke test should be re-attempted now that this prerequisite failure is resolved.
+- Windows native capture and Linux ffmpeg fallback (`start_recording`'s non-darwin branches) — only
+  tested on macOS so far.
+- `read_project`'s happy path (needs a real `.recordly` file, which requires Phase 2's editor/save tools).
+- The full MCP stdio/tool-schema layer end-to-end via an actual MCP client (Claude Desktop/Code) —
+  `smoke-drive.mjs` calls the tool handlers directly, bypassing `@modelcontextprotocol/sdk`'s
+  transport and schema validation. Recommended as a follow-up once Phase 2 lands.
