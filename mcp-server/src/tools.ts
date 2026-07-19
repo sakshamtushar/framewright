@@ -83,5 +83,13 @@ export function buildToolHandlers(client: RpcClient): Record<string, ToolHandler
 		async set_frame_style(args) {
 			return client.call("editor.setFrameStyle", args);
 		},
+
+		async set_webcam_overlay(args) {
+			return client.call("editor.setWebcamOverlay", args);
+		},
+
+		async add_annotation(args) {
+			return client.call("editor.addAnnotation", args);
+		},
 	};
 }

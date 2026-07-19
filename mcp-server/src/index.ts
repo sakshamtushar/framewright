@@ -115,6 +115,63 @@ async function main() {
 		async (args) => toContent(await handlers.set_frame_style(args)),
 	);
 
+	server.tool(
+		"set_webcam_overlay",
+		"Set webcam overlay properties on the currently open editor: enabled, source path, position, size, crop, mirror, corner radius, shadow, etc. All fields optional — only provided fields are changed.",
+		{
+			enabled: z.boolean().optional(),
+			sourcePath: z.string().nullable().optional(),
+			timeOffsetMs: z.number().optional(),
+			mirror: z.boolean().optional(),
+			reactToZoom: z.boolean().optional(),
+			cropRegion: z
+				.object({
+					x: z.number(),
+					y: z.number(),
+					width: z.number(),
+					height: z.number(),
+				})
+				.optional(),
+			corner: z.enum(["top-left", "top-right", "bottom-left", "bottom-right"]).optional(),
+			positionPreset: z
+				.enum([
+					"top-left",
+					"top-right",
+					"bottom-left",
+					"bottom-right",
+					"top-center",
+					"center-left",
+					"center",
+					"center-right",
+					"bottom-center",
+					"custom",
+				])
+				.optional(),
+			positionX: z.number().min(0).max(1).optional(),
+			positionY: z.number().min(0).max(1).optional(),
+			size: z.number().optional(),
+			width: z.number().optional(),
+			height: z.number().optional(),
+			cornerRadius: z.number().optional(),
+			shadow: z.number().optional(),
+			margin: z.number().optional(),
+		},
+		async (args) => toContent(await handlers.set_webcam_overlay(args)),
+	);
+
+	server.tool(
+		"add_annotation",
+		"Add a text/image/figure/blur annotation to the currently open editor's timeline.",
+		{
+			startMs: z.number(),
+			endMs: z.number(),
+			type: z.enum(["text", "image", "figure", "blur"]).optional(),
+			content: z.string().optional(),
+			trackIndex: z.number().optional(),
+		},
+		async (args) => toContent(await handlers.add_annotation(args)),
+	);
+
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
 }

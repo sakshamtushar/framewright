@@ -134,4 +134,20 @@ describe("buildToolHandlers", () => {
 		expect(result).toEqual({ success: true });
 		expect(client.call).toHaveBeenCalledWith("editor.setFrameStyle", { wallpaper: "gradient-1", borderRadius: 12 });
 	});
+
+	it("set_webcam_overlay forwards args directly to editor.setWebcamOverlay", async () => {
+		const client = fakeClient({ "editor.setWebcamOverlay": { success: true } });
+		const handlers = buildToolHandlers(client);
+		const result = await handlers.set_webcam_overlay({ enabled: true, mirror: true });
+		expect(result).toEqual({ success: true });
+		expect(client.call).toHaveBeenCalledWith("editor.setWebcamOverlay", { enabled: true, mirror: true });
+	});
+
+	it("add_annotation forwards args directly to editor.addAnnotation", async () => {
+		const client = fakeClient({ "editor.addAnnotation": { id: "annotation-1" } });
+		const handlers = buildToolHandlers(client);
+		const result = await handlers.add_annotation({ startMs: 0, endMs: 2000, content: "Hello" });
+		expect(result).toEqual({ id: "annotation-1" });
+		expect(client.call).toHaveBeenCalledWith("editor.addAnnotation", { startMs: 0, endMs: 2000, content: "Hello" });
+	});
 });
