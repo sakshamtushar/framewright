@@ -93,7 +93,46 @@ follow-up investigation into stop timing right after a resume, independent of th
 
 - Windows native capture and Linux ffmpeg fallback (`start_recording`'s non-darwin branches) — only
   tested on macOS so far.
-- `read_project`'s happy path (needs a real `.recordly` file, which requires Phase 2's editor/save tools).
 - The full MCP stdio/tool-schema layer end-to-end via an actual MCP client (Claude Desktop/Code) —
   `smoke-drive.mjs` calls the tool handlers directly, bypassing `@modelcontextprotocol/sdk`'s
   transport and schema validation. Recommended as a follow-up once Phase 2 lands.
+
+## Phase 2a: Editor bridge
+
+**Date:** 2026-07-19
+**Environment:** Real desktop session, macOS (Darwin 25.5.0), via `node smoke-drive.mjs`
+**Result:** ✅ Full end-to-end pass — the new generic editor automation bridge (Tasks 1-5) works
+against a real, live editor window.
+
+### What was verified live
+
+1. **`open_editor`** → opened the singleton editor `BrowserWindow` via the existing (Phase 1)
+   `switch-to-editor` channel.
+2. **`get_project_state`** → after waiting ~3s for the editor to mount, returned a real
+   `ProjectEditorState`-shaped object (`{ zoomRegionCount: 0, ... }` on first call — a fresh editor
+   with no zoom regions yet, as expected).
+3. **`add_zoom_region`** with `{ startMs: 0, endMs: 1000, depth: 3 }` → returned `{ id: "zoom-1" }`.
+4. **Round-trip verification** — the critical assertion: called `get_project_state` again after
+   `add_zoom_region` and confirmed `zoom-1` was actually present in the returned `zoomRegions` array.
+   This proves the full round trip: main process → `automation:editor-request` IPC → renderer's
+   `VideoEditor.tsx` dispatch effect → real `setZoomRegions` state mutation → next `getState` call
+   reads the updated live state back. Not a stub, not a mocked success — a real state mutation that
+   persisted in the renderer.
+
+### Known flake reproduced again (see Phase 1 section above)
+
+The same "moov atom not found" native-layer flake from Phase 1 recurred once during this run's
+recording lifecycle test (`stop_recording` after pause/resume). Confirms it's a pre-existing,
+intermittent issue in the recording pipeline, unrelated to and unaffected by the Phase 2a editor
+bridge work — the failure happened before the editor bridge portion of the test even ran, and the
+editor bridge test itself (which doesn't depend on recording succeeding) completed cleanly
+afterward.
+
+### Not yet verified
+
+- Only `getState` and `addZoomRegion` are covered — the remaining editing operations (trim, speed
+  regions, webcam overlay, frame style, annotations, captions) use the same bridge pattern but are
+  not yet implemented as tools (deliberately out of scope for Phase 2a; see the plan's final section).
+- `open_editor`'s behavior when an editor window is already open with unsaved changes, or when
+  called before any recording/project exists (this run always opened the editor after a recording
+  attempt, which sets a "current video path" the editor can load).

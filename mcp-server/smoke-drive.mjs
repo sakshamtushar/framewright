@@ -60,6 +60,26 @@ async function main() {
 		log("stop_recording", stopResult);
 		if (stopResult?.path) recordedPaths.push(stopResult.path);
 
+		console.log("\n--- Editor bridge test ---");
+		log("open_editor", await handlers.open_editor({}));
+		await new Promise((r) => setTimeout(r, 3000)); // give the editor window time to mount
+
+		const state = await handlers.get_project_state({});
+		log("get_project_state", { zoomRegionCount: state?.zoomRegions?.length ?? 0 });
+
+		const zoomResult = await handlers.add_zoom_region({ startMs: 0, endMs: 1000, depth: 3 });
+		log("add_zoom_region", zoomResult);
+
+		const stateAfterZoom = await handlers.get_project_state({});
+		const zoomRegions = stateAfterZoom?.zoomRegions ?? [];
+		const addedRegion = zoomRegions.find((r) => r.id === zoomResult.id);
+		if (!addedRegion) {
+			throw new Error(
+				`add_zoom_region reported id ${zoomResult.id} but get_project_state's zoomRegions does not contain it: ${JSON.stringify(zoomRegions)}`,
+			);
+		}
+		console.log(`\nVerified: zoom region ${zoomResult.id} is present in project state after adding it.`);
+
 		console.log("\n--- Error-path checks ---");
 		log("read_project (nonexistent path)", await handlers.read_project({ filePath: "/tmp/does-not-exist.recordly" }).catch((e) => ({ threw: e.message })));
 
