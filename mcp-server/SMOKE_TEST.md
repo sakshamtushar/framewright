@@ -167,4 +167,35 @@ tools all succeeded in one continuous run).
   the added zoom region, so the cascade path itself wasn't exercised, only the basic trim.
 - `padding` (nested object) and `frame` (nullable) fields of `set_frame_style` — this run only
   exercised `borderRadius`/`shadowIntensity` (flagged as a unit-test gap in Task 3's review too).
-- Remaining editing tools (speed regions, webcam overlay, annotations, captions) — still Phase 2c+.
+- Remaining editing tools (speed regions, captions) — still Phase 2d+.
+
+## Phase 2c: set_webcam_overlay, add_annotation
+
+**Date:** 2026-07-19
+**Environment:** Real desktop session, macOS (Darwin 25.5.0), via `node smoke-drive.mjs`
+**Result:** ✅ Full end-to-end pass — no flake this run. All 13 tools now shipped (Phase 1 + 2a +
+2b + 2c) were exercised in one continuous run: recording lifecycle, editor bridge open, zoom
+region, frame style, clip trim, webcam overlay, and annotation — every one succeeded.
+
+### What was verified live
+
+1. **`set_webcam_overlay`** with `{ enabled: true, mirror: true }` → `{ success: true }`.
+2. **Round-trip verification** — called `get_project_state` again and confirmed
+   `webcam.enabled === true` and `webcam.mirror === true` in the returned state, proving the
+   change persisted in the live renderer (not a stubbed success).
+3. **`add_annotation`** with `{ startMs: 0, endMs: 2000, content: "Smoke test annotation" }` →
+   `{ id: "annotation-1" }`.
+4. **Round-trip verification** — called `get_project_state` again and confirmed `annotation-1` was
+   present in the returned `annotationRegions` array, proving the append genuinely persisted.
+
+### Not yet verified
+
+- `set_webcam_overlay`'s expanded zod schema fields beyond `enabled`/`mirror` (e.g. `cropRegion`,
+  `positionPreset`, `sourcePath`, `corner`) — this run only exercised the two boolean fields tested
+  at the unit level too (flagged as a coverage gap in Task 3's review).
+- `add_annotation`'s `type`/`trackIndex` fields, and non-`"text"` annotation types (`image`,
+  `figure`, `blur`) — this run only added a default-type text annotation.
+- Remaining editing tools (speed/clip-speed control, caption generation and editing) — deferred,
+  see this phase's plan for why (`add_speed_region` needs its own design given
+  `handleClipSpeedChange`'s more complex overlap-blocking contract; captions are async/long-running,
+  a different shape than the synchronous operations covered so far).

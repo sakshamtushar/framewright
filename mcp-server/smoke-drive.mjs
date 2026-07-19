@@ -106,6 +106,27 @@ async function main() {
 			);
 		}
 
+		const webcamResult = await handlers.set_webcam_overlay({ enabled: true, mirror: true });
+		log("set_webcam_overlay", webcamResult);
+		const stateAfterWebcam = await handlers.get_project_state({});
+		if (stateAfterWebcam.webcam?.enabled !== true || stateAfterWebcam.webcam?.mirror !== true) {
+			throw new Error(
+				`set_webcam_overlay did not persist: got webcam=${JSON.stringify(stateAfterWebcam.webcam)}`,
+			);
+		}
+		console.log("\nVerified: webcam overlay change persisted in project state.");
+
+		const annotationResult = await handlers.add_annotation({ startMs: 0, endMs: 2000, content: "Smoke test annotation" });
+		log("add_annotation", annotationResult);
+		const stateAfterAnnotation = await handlers.get_project_state({});
+		const annotations = stateAfterAnnotation?.annotationRegions ?? [];
+		if (!annotations.find((a) => a.id === annotationResult.id)) {
+			throw new Error(
+				`add_annotation reported id ${annotationResult.id} but it's not in project state: ${JSON.stringify(annotations)}`,
+			);
+		}
+		console.log(`\nVerified: annotation ${annotationResult.id} is present in project state after adding it.`);
+
 		console.log("\n--- Error-path checks ---");
 		log("read_project (nonexistent path)", await handlers.read_project({ filePath: "/tmp/does-not-exist.recordly" }).catch((e) => ({ threw: e.message })));
 
