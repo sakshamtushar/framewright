@@ -3107,6 +3107,20 @@ export default function VideoEditor() {
 								"trimClip requires clipId (string) and numeric startMs/endMs with endMs > startMs",
 							);
 						}
+						if (!clipRegions.some((c) => c.id === params.clipId)) {
+							throw new Error(`No clip region with id ${params.clipId} exists.`);
+						}
+						const overlapsNeighbour = clipRegions.some(
+							(c) =>
+								c.id !== params.clipId &&
+								params.startMs! < c.endMs &&
+								c.startMs < params.endMs!,
+						);
+						if (overlapsNeighbour) {
+							throw new Error(
+								`trimClip requested span [${params.startMs}, ${params.endMs}] overlaps a neighbouring clip region`,
+							);
+						}
 						handleClipSpanChange(params.clipId, { start: params.startMs, end: params.endMs });
 						result = { success: true };
 						break;
