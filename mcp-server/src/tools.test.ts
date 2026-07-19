@@ -118,4 +118,20 @@ describe("buildToolHandlers", () => {
 			focus: undefined,
 		});
 	});
+
+	it("trim_clip calls editor.trimClip with clipId/startMs/endMs", async () => {
+		const client = fakeClient({ "editor.trimClip": { success: true } });
+		const handlers = buildToolHandlers(client);
+		const result = await handlers.trim_clip({ clipId: "clip-1", startMs: 0, endMs: 5000 });
+		expect(result).toEqual({ success: true });
+		expect(client.call).toHaveBeenCalledWith("editor.trimClip", { clipId: "clip-1", startMs: 0, endMs: 5000 });
+	});
+
+	it("set_frame_style forwards args directly to editor.setFrameStyle", async () => {
+		const client = fakeClient({ "editor.setFrameStyle": { success: true } });
+		const handlers = buildToolHandlers(client);
+		const result = await handlers.set_frame_style({ wallpaper: "gradient-1", borderRadius: 12 });
+		expect(result).toEqual({ success: true });
+		expect(client.call).toHaveBeenCalledWith("editor.setFrameStyle", { wallpaper: "gradient-1", borderRadius: 12 });
+	});
 });

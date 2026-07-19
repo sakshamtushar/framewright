@@ -87,6 +87,34 @@ async function main() {
 		async (args) => toContent(await handlers.add_zoom_region(args)),
 	);
 
+	server.tool(
+		"trim_clip",
+		"Resize or move a clip's boundaries on the currently open editor's timeline.",
+		{ clipId: z.string(), startMs: z.number(), endMs: z.number() },
+		async (args) => toContent(await handlers.trim_clip(args)),
+	);
+
+	server.tool(
+		"set_frame_style",
+		"Set the currently open editor's frame style: wallpaper, frame preset, padding, border radius, shadow, background blur. All fields optional — only provided fields are changed.",
+		{
+			wallpaper: z.string().optional(),
+			frame: z.string().nullable().optional(),
+			padding: z
+				.object({
+					top: z.number().optional(),
+					bottom: z.number().optional(),
+					left: z.number().optional(),
+					right: z.number().optional(),
+				})
+				.optional(),
+			borderRadius: z.number().optional(),
+			shadowIntensity: z.number().optional(),
+			backgroundBlur: z.number().optional(),
+		},
+		async (args) => toContent(await handlers.set_frame_style(args)),
+	);
+
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
 }

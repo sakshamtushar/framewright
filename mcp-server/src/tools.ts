@@ -71,5 +71,17 @@ export function buildToolHandlers(client: RpcClient): Record<string, ToolHandler
 				focus,
 			});
 		},
+
+		async trim_clip(args) {
+			return client.call("editor.trimClip", {
+				clipId: args.clipId,
+				startMs: args.startMs,
+				endMs: args.endMs,
+			});
+		},
+
+		async set_frame_style(args) {
+			return client.call("editor.setFrameStyle", args);
+		},
 	};
 }
