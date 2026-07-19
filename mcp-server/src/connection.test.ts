@@ -3,19 +3,19 @@ import { describe, expect, it, vi } from "vitest";
 const mockReadLockfile = vi.fn();
 const mockIsProcessAlive = vi.fn();
 
-vi.mock("./lockfile", () => ({
+vi.mock("./lockfile.js", () => ({
 	readLockfile: () => mockReadLockfile(),
 	isProcessAlive: (pid: number) => mockIsProcessAlive(pid),
 }));
 
-vi.mock("./rpcClient", () => ({
+vi.mock("./rpcClient.js", () => ({
 	RpcClient: vi.fn().mockImplementation(function (port: number, token: string) {
 		return { port, token };
 	}),
 }));
 
-import { getOrCreateConnection } from "./connection";
-import { RpcClient } from "./rpcClient";
+import { getOrCreateConnection } from "./connection.js";
+import { RpcClient } from "./rpcClient.js";
 
 describe("getOrCreateConnection", () => {
 	it("attaches to a live instance instead of spawning when the lockfile is valid", async () => {

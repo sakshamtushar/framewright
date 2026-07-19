@@ -5,11 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let lockPath: string;
 
-vi.mock("./paths", () => ({
+vi.mock("./paths.js", () => ({
 	getLockfilePath: () => lockPath,
 }));
 
-import { isProcessAlive, readLockfile } from "./lockfile";
+import { isProcessAlive, readLockfile } from "./lockfile.js";
 
 describe("readLockfile", () => {
 	let dir: string;

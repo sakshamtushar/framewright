@@ -21,6 +21,9 @@ export class RpcClient {
 			this.socket.once("error", (error) => reject(error));
 		});
 		this.socket.on("message", (data) => this.handleMessage(data.toString()));
+		this.socket.on("error", (error) => {
+			this.rejectAllPending(error instanceof Error ? error : new Error(String(error)));
+		});
 	}
 
 	private handleMessage(raw: string) {
@@ -57,6 +60,15 @@ export class RpcClient {
 	}
 
 	close(): void {
+		this.rejectAllPending(new Error("RpcClient closed while call was pending"));
 		this.socket.close();
+	}
+
+	private rejectAllPending(reason: Error): void {
+		for (const pending of this.pending.values()) {
+			clearTimeout(pending.timeout);
+			pending.reject(reason);
+		}
+		this.pending.clear();
 	}
 }

@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { getLockfilePath } from "./paths";
+import { getLockfilePath } from "./paths.js";
 
 export interface AutomationLockfile {
 	pid: number;

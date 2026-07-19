@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { getLockfilePath, getRecordlyDevUserDataPath } from "./paths";
+import { getLockfilePath, getRecordlyDevUserDataPath } from "./paths.js";
 
 describe("getRecordlyDevUserDataPath", () => {
 	it("uses ~/Library/Application Support on darwin", () => {

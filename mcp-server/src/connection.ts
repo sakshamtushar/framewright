@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
-import { isProcessAlive, readLockfile } from "./lockfile";
-import { RpcClient } from "./rpcClient";
+import { isProcessAlive, readLockfile } from "./lockfile.js";
+import { RpcClient } from "./rpcClient.js";
 
 const POLL_INTERVAL_MS = 500;
 const DEFAULT_SPAWN_TIMEOUT_MS = 60_000;
