@@ -7,6 +7,7 @@ import {
 	nativeScreenRecordingActive,
 	windowsNativeCaptureActive,
 } from "../ipc/state";
+import { requestEditorState } from "./editorBridge";
 import { removeLockfile, writeLockfile } from "./lockfile";
 
 interface RpcRequest {
@@ -43,6 +44,7 @@ const METHOD_TO_CHANNEL: Record<string, string> = {
 	"recording.stopFfmpeg": "stop-ffmpeg-recording",
 	"project.list": "list-project-files",
 	"project.read": "open-project-file-at-path",
+	"lifecycle.openEditor": "switch-to-editor",
 };
 
 function isRecording(): boolean {
@@ -70,6 +72,16 @@ export async function dispatchRpcRequest(request: RpcRequest): Promise<RpcRespon
 				id: request.id,
 				result: { recording: isRecording(), platform: process.platform },
 			};
+		}
+
+		const EDITOR_BRIDGE_METHODS: Record<string, string> = {
+			"editor.getState": "getState",
+			"editor.addZoomRegion": "addZoomRegion",
+		};
+		const editorBridgeType = EDITOR_BRIDGE_METHODS[request.method];
+		if (editorBridgeType) {
+			const result = await requestEditorState(editorBridgeType, request.params ?? {});
+			return { jsonrpc: "2.0", id: request.id, result };
 		}
 
 		const channel = METHOD_TO_CHANNEL[request.method];

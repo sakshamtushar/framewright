@@ -28,6 +28,7 @@ vi.mock("electron", () => ({
 
 import { ipcHandlerRegistry } from "../ipc/registry";
 import { registerProjectHandlers } from "../ipc/register/project";
+import * as editorBridge from "./editorBridge";
 import { dispatchRpcRequest } from "./server";
 
 describe("dispatchRpcRequest", () => {
@@ -114,6 +115,67 @@ describe("dispatchRpcRequest", () => {
 			id: 5,
 			result: { received: "/some/path.recordly" },
 		});
+	});
+
+	it("editor.getState calls requestEditorState with the request's params as payload", async () => {
+		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ zoomRegions: [] });
+
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 10,
+			method: "editor.getState",
+			params: {},
+		});
+
+		expect(spy).toHaveBeenCalledWith("getState", {});
+		expect(response).toEqual({ jsonrpc: "2.0", id: 10, result: { zoomRegions: [] } });
+		spy.mockRestore();
+	});
+
+	it("editor.addZoomRegion forwards params directly as the payload (not wrapped in arg)", async () => {
+		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ id: "zoom-1" });
+
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 11,
+			method: "editor.addZoomRegion",
+			params: { startMs: 0, endMs: 1000, depth: 3 },
+		});
+
+		expect(spy).toHaveBeenCalledWith("addZoomRegion", { startMs: 0, endMs: 1000, depth: 3 });
+		expect(response).toEqual({ jsonrpc: "2.0", id: 11, result: { id: "zoom-1" } });
+		spy.mockRestore();
+	});
+
+	it("editor.getState returns a JSON-RPC error envelope when the editor bridge rejects", async () => {
+		const spy = vi.spyOn(editorBridge, "requestEditorState").mockRejectedValue(new Error("No editor window is open."));
+
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 12,
+			method: "editor.getState",
+			params: {},
+		});
+
+		expect(response).toEqual({
+			jsonrpc: "2.0",
+			id: 12,
+			error: { code: -32000, message: "No editor window is open." },
+		});
+		spy.mockRestore();
+	});
+
+	it("lifecycle.openEditor routes to the switch-to-editor channel", async () => {
+		ipcHandlerRegistry.set("switch-to-editor", async () => undefined);
+
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 13,
+			method: "lifecycle.openEditor",
+			params: {},
+		});
+
+		expect(response).toEqual({ jsonrpc: "2.0", id: 13, result: undefined });
 	});
 });
 
