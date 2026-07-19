@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ipcHandlerRegistry } from "../ipc/registry";
 import { dispatchRpcRequest } from "./server";
 
@@ -66,6 +66,25 @@ describe("dispatchRpcRequest", () => {
 			jsonrpc: "2.0",
 			id: 4,
 			result: { recording: false, platform: process.platform },
+		});
+	});
+
+	it("forwards the arg parameter to the handler", async () => {
+		ipcHandlerRegistry.set("open-project-file-at-path", async (_event, filePath) => ({
+			received: filePath,
+		}));
+
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 5,
+			method: "project.read",
+			params: { arg: "/some/path.recordly" },
+		});
+
+		expect(response).toEqual({
+			jsonrpc: "2.0",
+			id: 5,
+			result: { received: "/some/path.recordly" },
 		});
 	});
 });

@@ -105,6 +105,10 @@ export async function startAutomationServerIfRequested(): Promise<void> {
 
 	wss = new WebSocketServer({ host: "127.0.0.1", port: 0 });
 
+	wss.on("error", (error) => {
+		console.warn("[automation] WebSocketServer error:", error);
+	});
+
 	wss.on("connection", (socket: WebSocket, req) => {
 		const url = new URL(req.url ?? "", "http://localhost");
 		if (url.searchParams.get("token") !== token) {
