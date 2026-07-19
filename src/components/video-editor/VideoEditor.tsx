@@ -3095,6 +3095,52 @@ export default function VideoEditor() {
 						result = { id };
 						break;
 					}
+					case "trimClip": {
+						const params = payload as { clipId?: string; startMs?: number; endMs?: number };
+						if (
+							typeof params.clipId !== "string" ||
+							typeof params.startMs !== "number" ||
+							typeof params.endMs !== "number" ||
+							params.endMs <= params.startMs
+						) {
+							throw new Error(
+								"trimClip requires clipId (string) and numeric startMs/endMs with endMs > startMs",
+							);
+						}
+						handleClipSpanChange(params.clipId, { start: params.startMs, end: params.endMs });
+						result = { success: true };
+						break;
+					}
+					case "setFrameStyle": {
+						const params = payload as {
+							wallpaper?: string;
+							frame?: string | null;
+							padding?: Partial<Padding>;
+							borderRadius?: number;
+							shadowIntensity?: number;
+							backgroundBlur?: number;
+						};
+						if (typeof params.wallpaper === "string") {
+							setWallpaper(params.wallpaper);
+						}
+						if (params.frame !== undefined) {
+							setFrame(params.frame);
+						}
+						if (params.padding) {
+							setPadding((prev) => ({ ...prev, ...params.padding }));
+						}
+						if (typeof params.borderRadius === "number") {
+							setBorderRadius(params.borderRadius);
+						}
+						if (typeof params.shadowIntensity === "number") {
+							setShadowIntensity(params.shadowIntensity);
+						}
+						if (typeof params.backgroundBlur === "number") {
+							setBackgroundBlur(params.backgroundBlur);
+						}
+						result = { success: true };
+						break;
+					}
 					default:
 						throw new Error(`Unknown automation editor request type: ${type}`);
 				}
