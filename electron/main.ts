@@ -27,6 +27,7 @@ import {
 	killWindowsCaptureProcess,
 	registerIpcHandlers,
 } from "./ipc/handlers";
+import { startAutomationServerIfRequested } from "./automation/server";
 import { ensureMediaServer } from "./mediaServer";
 import { shouldGrantDisplayCapture, shouldGrantMediaPermission } from "./permissionPolicy";
 import { ensurePackagedRendererServer, getPackagedRendererBaseUrl } from "./rendererServer";
@@ -1043,6 +1044,12 @@ app.whenReady().then(async () => {
 	);
 
 	registerExtensionIpcHandlers();
+
+	try {
+		await startAutomationServerIfRequested();
+	} catch (error) {
+		console.warn("[automation] Failed to start automation server:", error);
+	}
 
 	if (IS_SMOKE_EXPORT || process.env.RECORDLY_DEV_OPEN_RECORDING_INPUT) {
 		await logSmokeExportGpuDiagnostics();
