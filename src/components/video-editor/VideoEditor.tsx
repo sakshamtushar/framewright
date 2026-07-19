@@ -3055,6 +3055,61 @@ export default function VideoEditor() {
 		return () => cleanup?.();
 	}, [saveProject]);
 
+	useEffect(() => {
+		const cleanup = window.electronAPI.onAutomationEditorRequest(async ({ requestId, type, payload }) => {
+			try {
+				let result: unknown;
+				switch (type) {
+					case "getState": {
+						result = currentPersistedEditorState;
+						break;
+					}
+					case "addZoomRegion": {
+						const params = payload as {
+							startMs?: number;
+							endMs?: number;
+							depth?: ZoomDepth;
+							focus?: { cx: number; cy: number };
+						};
+						if (
+							typeof params.startMs !== "number" ||
+							typeof params.endMs !== "number" ||
+							params.endMs <= params.startMs
+						) {
+							throw new Error(
+								"addZoomRegion requires numeric startMs/endMs with endMs > startMs",
+							);
+						}
+						const id = `zoom-${nextZoomIdRef.current++}`;
+						const depth: ZoomDepth = params.depth ?? 2;
+						const newRegion: ZoomRegion = {
+							id,
+							startMs: Math.round(params.startMs),
+							endMs: Math.round(params.endMs),
+							depth,
+							focus: clampFocusToDepth(params.focus ?? { cx: 0.5, cy: 0.5 }, depth),
+							mode: "auto",
+						};
+						setZoomRegions((prev) => [...prev, newRegion]);
+						setSelectedZoomId(id);
+						result = { id };
+						break;
+					}
+					default:
+						throw new Error(`Unknown automation editor request type: ${type}`);
+				}
+				window.electronAPI.sendAutomationEditorResponse(requestId, { success: true, result });
+			} catch (error) {
+				window.electronAPI.sendAutomationEditorResponse(requestId, {
+					success: false,
+					error: error instanceof Error ? error.message : String(error),
+				});
+			}
+		});
+
+		return () => cleanup?.();
+	}, [currentPersistedEditorState]);
+
 	const handleSaveProject = useCallback(async () => {
 		await saveProject(false);
 	}, [saveProject]);

@@ -864,6 +864,13 @@ interface Window {
 		setAppSetting: (key: string, value: unknown) => boolean;
 		setHasUnsavedChanges: (hasChanges: boolean) => void;
 		onRequestSaveBeforeClose: (callback: () => Promise<boolean>) => () => void;
+		onAutomationEditorRequest: (
+			callback: (request: { requestId: string; type: string; payload: unknown }) => void | Promise<void>,
+		) => () => void;
+		sendAutomationEditorResponse: (
+			requestId: string,
+			response: { success: true; result: unknown } | { success: false; error: string },
+		) => void;
 		isNativeWindowsCaptureAvailable: () => Promise<{ available: boolean }>;
 		muxNativeWindowsRecording: (expectedDurationMs?: number) => Promise<{
 			success: boolean;
