@@ -188,6 +188,7 @@ import {
 } from "./timeline/zoomSuggestionUtils";
 import {
 	type AnnotationRegion,
+	type AnnotationType,
 	type AudioRegion,
 	type AutoCaptionSettings,
 	type CaptionCue,
@@ -3153,6 +3154,47 @@ export default function VideoEditor() {
 							setBackgroundBlur(params.backgroundBlur);
 						}
 						result = { success: true };
+						break;
+					}
+					case "setWebcamOverlay": {
+						const params = payload as Partial<WebcamOverlaySettings>;
+						setWebcam((prev) => ({ ...prev, ...params }));
+						result = { success: true };
+						break;
+					}
+					case "addAnnotation": {
+						const params = payload as {
+							startMs?: number;
+							endMs?: number;
+							type?: AnnotationType;
+							content?: string;
+							trackIndex?: number;
+						};
+						if (
+							typeof params.startMs !== "number" ||
+							typeof params.endMs !== "number" ||
+							params.endMs <= params.startMs
+						) {
+							throw new Error(
+								"addAnnotation requires numeric startMs/endMs with endMs > startMs",
+							);
+						}
+						const id = `annotation-${nextAnnotationIdRef.current++}`;
+						const zIndex = nextAnnotationZIndexRef.current++;
+						const newRegion: AnnotationRegion = {
+							id,
+							startMs: Math.round(params.startMs),
+							endMs: Math.round(params.endMs),
+							type: params.type ?? "text",
+							content: params.content ?? "Enter text...",
+							position: { ...DEFAULT_ANNOTATION_POSITION },
+							size: { ...DEFAULT_ANNOTATION_SIZE },
+							style: { ...DEFAULT_ANNOTATION_STYLE },
+							zIndex,
+							trackIndex: params.trackIndex ?? 0,
+						};
+						setAnnotationRegions((prev) => [...prev, newRegion]);
+						result = { id };
 						break;
 					}
 					default:
