@@ -161,11 +161,10 @@ async function main() {
 
 	server.tool(
 		"add_annotation",
-		"Add a text/image/figure/blur annotation to the currently open editor's timeline.",
+		"Add a text annotation to the currently open editor's timeline. Only the \"text\" annotation type is supported by this tool today — image/figure/blur annotations require additional payload fields (imageContent/figureData/blurIntensity) this tool doesn't yet populate.",
 		{
 			startMs: z.number(),
 			endMs: z.number(),
-			type: z.enum(["text", "image", "figure", "blur"]).optional(),
 			content: z.string().optional(),
 			trackIndex: z.number().optional(),
 		},
