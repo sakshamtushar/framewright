@@ -15,7 +15,9 @@ export function getLockfilePath(): string {
 }
 
 export async function writeLockfile(data: AutomationLockfile): Promise<void> {
-	await fs.writeFile(getLockfilePath(), JSON.stringify(data), { mode: 0o600 });
+	const path = getLockfilePath();
+	await fs.writeFile(path, JSON.stringify(data), { mode: 0o600 });
+	await fs.chmod(path, 0o600);
 }
 
 export async function removeLockfile(): Promise<void> {

@@ -40,4 +40,31 @@ describe("automation lockfile", () => {
 	it("removeLockfile does not throw when no lockfile exists", async () => {
 		await expect(removeLockfile()).resolves.toBeUndefined();
 	});
+
+	it("enforces 0o600 permissions on lockfile", async () => {
+		await writeLockfile({ pid: 123, port: 4567, token: "abc" });
+		const stat = await fs.stat(getLockfilePath());
+		const mode = stat.mode & 0o777;
+		expect(mode).toBe(0o600);
+	});
+
+	it("enforces 0o600 permissions when overwriting existing lockfile", async () => {
+		const lockfilePath = getLockfilePath();
+		// Write a lockfile with different permissions (simulating stale lockfile)
+		await fs.writeFile(lockfilePath, "stale", { mode: 0o644 });
+		let stat = await fs.stat(lockfilePath);
+		expect(stat.mode & 0o777).toBe(0o644);
+
+		// Overwrite with new data
+		await writeLockfile({ pid: 456, port: 8901, token: "xyz" });
+
+		// Verify new content
+		const raw = await fs.readFile(lockfilePath, "utf8");
+		expect(JSON.parse(raw)).toEqual({ pid: 456, port: 8901, token: "xyz" });
+
+		// Verify permissions are reset to 0o600
+		stat = await fs.stat(lockfilePath);
+		const mode = stat.mode & 0o777;
+		expect(mode).toBe(0o600);
+	});
 });
