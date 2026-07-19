@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 
-export type IpcHandlerFn = (event: Electron.IpcMainInvokeEvent, ...args: unknown[]) => unknown;
+export type IpcHandlerFn = (event: Electron.IpcMainInvokeEvent, ...args: any[]) => any;
 
 export const ipcHandlerRegistry = new Map<string, IpcHandlerFn>();
 

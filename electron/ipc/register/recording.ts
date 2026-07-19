@@ -8,10 +8,10 @@ import {
 	BrowserWindow,
 	desktopCapturer,
 	dialog,
-	ipcMain,
 	shell,
 	systemPreferences,
 } from "electron";
+import { handle } from "../registry";
 import { showCursor } from "../../cursorHider";
 import { getMonitorHandles } from "../monitorResolver";
 import { ALLOW_RECORDLY_WINDOW_CAPTURE } from "../constants";
@@ -394,7 +394,7 @@ async function resolveExistingPath(...candidates: Array<string | null | undefine
 export function registerRecordingHandlers(
 	onRecordingStateChange?: (recording: boolean, sourceName: string) => void,
 ) {
-	ipcMain.handle(
+	handle(
 		"start-native-screen-recording",
 		async (_, source: SelectedSource, options?: NativeMacRecordingOptions) => {
 			// Windows native capture path
@@ -902,7 +902,7 @@ export function registerRecordingHandlers(
 		},
 	);
 
-	ipcMain.handle("stop-native-screen-recording", async () => {
+	handle("stop-native-screen-recording", async () => {
 		const start = Date.now();
 		console.log("[PERF:MAIN] Handler: stop-native-screen-recording: STARTED");
 		try {
@@ -1247,7 +1247,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("recover-native-screen-recording", async () => {
+	handle("recover-native-screen-recording", async () => {
 		if (process.platform !== "darwin") {
 			return {
 				success: false,
@@ -1266,7 +1266,7 @@ export function registerRecordingHandlers(
 		};
 	});
 
-	ipcMain.handle("pause-native-screen-recording", async () => {
+	handle("pause-native-screen-recording", async () => {
 		if (process.platform === "win32") {
 			if (!windowsNativeCaptureActive || !windowsCaptureProcess) {
 				return { success: false, message: "No native Windows screen recording is active." };
@@ -1317,7 +1317,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("resume-native-screen-recording", async () => {
+	handle("resume-native-screen-recording", async () => {
 		if (process.platform === "win32") {
 			if (!windowsNativeCaptureActive || !windowsCaptureProcess) {
 				return { success: false, message: "No native Windows screen recording is active." };
@@ -1368,7 +1368,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("get-system-cursor-assets", async () => {
+	handle("get-system-cursor-assets", async () => {
 		try {
 			return { success: true, cursors: await getSystemCursorAssets() };
 		} catch (error) {
@@ -1377,15 +1377,15 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("is-native-windows-capture-available", async () => {
+	handle("is-native-windows-capture-available", async () => {
 		return { available: await isNativeWindowsCaptureAvailable() };
 	});
 
-	ipcMain.handle("get-last-native-capture-diagnostics", async () => {
+	handle("get-last-native-capture-diagnostics", async () => {
 		return { success: true, diagnostics: lastNativeCaptureDiagnostics };
 	});
 
-	ipcMain.handle("get-video-audio-fallback-paths", async (_event, videoPath: string) => {
+	handle("get-video-audio-fallback-paths", async (_event, videoPath: string) => {
 		if (!videoPath) {
 			return { success: true, paths: [], startDelayMsByPath: {} };
 		}
@@ -1403,7 +1403,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("mux-native-windows-recording", async (_event, expectedDurationMs?: number) => {
+	handle("mux-native-windows-recording", async (_event, expectedDurationMs?: number) => {
 		const start = Date.now();
 		console.log("[PERF:MAIN] Handler: mux-native-windows-recording: STARTED");
 		try {
@@ -1517,7 +1517,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("start-ffmpeg-recording", async (_, source: SelectedSource) => {
+	handle("start-ffmpeg-recording", async (_, source: SelectedSource) => {
 		if (ffmpegCaptureProcess) {
 			return { success: false, message: "An FFmpeg recording is already active." };
 		}
@@ -1559,7 +1559,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("stop-ffmpeg-recording", async () => {
+	handle("stop-ffmpeg-recording", async () => {
 		if (!ffmpegScreenRecordingActive) {
 			return { success: false, message: "No FFmpeg recording is active." };
 		}
@@ -1597,7 +1597,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle(
+	handle(
 		"store-microphone-sidecar",
 		async (
 			_,
@@ -1748,7 +1748,7 @@ export function registerRecordingHandlers(
 		},
 	);
 
-	ipcMain.handle("store-recorded-video", async (_, videoData: ArrayBuffer, fileName: unknown) => {
+	handle("store-recorded-video", async (_, videoData: ArrayBuffer, fileName: unknown) => {
 		try {
 			const recordingsDir = await getRecordingsDir();
 			const videoPath = resolveRecordedVideoStoragePath(recordingsDir, fileName);
@@ -1764,7 +1764,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("get-recorded-video-path", async () => {
+	handle("get-recorded-video-path", async () => {
 		try {
 			const recordingsDir = await getRecordingsDir();
 			const entries = await fs.readdir(recordingsDir, { withFileTypes: true });
@@ -1811,7 +1811,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("set-recording-state", (_, recording: boolean) => {
+	handle("set-recording-state", (_, recording: boolean) => {
 		if (recording) {
 			stopCursorCapture();
 			stopInteractionCapture();
@@ -1855,18 +1855,18 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle("pause-cursor-capture", (_, pausedAtMs?: unknown) => {
+	handle("pause-cursor-capture", (_, pausedAtMs?: unknown) => {
 		pauseCursorCaptureAtBoundary(normalizeRendererTimestampMs(pausedAtMs));
 		return { success: true };
 	});
 
-	ipcMain.handle("resume-cursor-capture", (_, resumedAtMs?: unknown) => {
+	handle("resume-cursor-capture", (_, resumedAtMs?: unknown) => {
 		resumeCursorCapture(normalizeRendererTimestampMs(resumedAtMs));
 		sampleCursorPoint();
 		return { success: true };
 	});
 
-	ipcMain.handle("get-cursor-telemetry", async (_, videoPath?: string) => {
+	handle("get-cursor-telemetry", async (_, videoPath?: string) => {
 		const targetVideoPath = normalizeVideoSourcePath(videoPath ?? currentVideoPath);
 		if (!targetVideoPath) {
 			return { success: true, samples: [] };
@@ -1894,7 +1894,7 @@ export function registerRecordingHandlers(
 		}
 	});
 
-	ipcMain.handle(
+	handle(
 		"set-cursor-telemetry",
 		async (_, videoPath: string | undefined, samples: CursorTelemetryPoint[]) => {
 			const targetVideoPath = normalizeVideoSourcePath(videoPath ?? currentVideoPath);

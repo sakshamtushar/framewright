@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { app, BrowserWindow, desktopCapturer, ipcMain } from "electron";
+import { app, BrowserWindow, desktopCapturer } from "electron";
+import { handle } from "../registry";
 import { ALLOW_RECORDLY_WINDOW_CAPTURE } from "../constants";
 import { selectedSource, setSelectedSource } from "../state";
 import type { SelectedSource } from "../types";
@@ -47,7 +48,7 @@ export function registerSourceHandlers({
 	createSourceSelectorWindow: () => BrowserWindow;
 	getSourceSelectorWindow: () => BrowserWindow | null;
 }) {
-	ipcMain.handle("get-sources", async (_, opts) => {
+	handle("get-sources", async (_, opts) => {
 		const cacheKey = JSON.stringify({
 			types: opts?.types,
 			thumbnailSize: opts?.thumbnailSize,
@@ -305,7 +306,7 @@ export function registerSourceHandlers({
 		}
 	});
 
-	ipcMain.handle("select-source", (_, source: SelectedSource) => {
+	handle("select-source", (_, source: SelectedSource) => {
 		setSelectedSource(source);
 		broadcastSelectedSourceChange();
 		stopWindowBoundsCapture();
@@ -316,7 +317,7 @@ export function registerSourceHandlers({
 		return selectedSource;
 	});
 
-	ipcMain.handle("show-source-highlight", async (_, source: SelectedSource) => {
+	handle("show-source-highlight", async (_, source: SelectedSource) => {
 		try {
 			const isWindow = source.id?.startsWith("window:");
 			const windowId = isWindow ? parseWindowId(source.id) : null;
@@ -518,11 +519,11 @@ body{background:transparent;overflow:hidden;width:100vw;height:100vh}
     }
   })
 
-  ipcMain.handle('get-selected-source', () => {
+  handle('get-selected-source', () => {
     return selectedSource
   })
 
-  ipcMain.handle('open-source-selector', () => {
+  handle('open-source-selector', () => {
     const sourceSelectorWin = getSourceSelectorWindow()
     if (sourceSelectorWin) {
       sourceSelectorWin.focus()
@@ -530,7 +531,7 @@ body{background:transparent;overflow:hidden;width:100vw;height:100vh}
     }
     createSourceSelectorWindow()
   })
-  ipcMain.handle('switch-to-editor', () => {
+  handle('switch-to-editor', () => {
     console.log('[switch-to-editor] Opening editor window')
     const sourceSelectorWin = getSourceSelectorWindow()
     if (sourceSelectorWin && !sourceSelectorWin.isDestroyed()) {
