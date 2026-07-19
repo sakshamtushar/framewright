@@ -960,6 +960,24 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		ipcRenderer.on("request-save-before-close", listener);
 		return () => ipcRenderer.removeListener("request-save-before-close", listener);
 	},
+	onAutomationEditorRequest: (
+		callback: (request: { requestId: string; type: string; payload: unknown }) => void | Promise<void>,
+	) => {
+		const listener = (
+			_event: Electron.IpcRendererEvent,
+			request: { requestId: string; type: string; payload: unknown },
+		) => {
+			void callback(request);
+		};
+		ipcRenderer.on("automation:editor-request", listener);
+		return () => ipcRenderer.removeListener("automation:editor-request", listener);
+	},
+	sendAutomationEditorResponse: (
+		requestId: string,
+		response: { success: true; result: unknown } | { success: false; error: string },
+	) => {
+		ipcRenderer.send("automation:editor-response", requestId, response);
+	},
 	isNativeWindowsCaptureAvailable: () =>
 		ipcRenderer.invoke("is-native-windows-capture-available"),
 	muxNativeWindowsRecording: (expectedDurationMs?: number) =>
