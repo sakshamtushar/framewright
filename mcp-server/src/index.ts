@@ -63,6 +63,30 @@ async function main() {
 		async (args) => toContent(await handlers.read_project(args)),
 	);
 
+	server.tool("open_editor", "Open (or focus) Recordly's editor window.", {}, async () =>
+		toContent(await handlers.open_editor({})),
+	);
+
+	server.tool(
+		"get_project_state",
+		"Get the currently open editor's full project state (zoom regions, trim, webcam, frame style, captions, etc.).",
+		{},
+		async () => toContent(await handlers.get_project_state({})),
+	);
+
+	server.tool(
+		"add_zoom_region",
+		"Add a zoom-in region to the currently open editor's timeline.",
+		{
+			startMs: z.number(),
+			endMs: z.number(),
+			depth: z.number().min(1).max(6).optional(),
+			focusX: z.number().min(0).max(1).optional(),
+			focusY: z.number().min(0).max(1).optional(),
+		},
+		async (args) => toContent(await handlers.add_zoom_region(args)),
+	);
+
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
 }

@@ -50,5 +50,26 @@ export function buildToolHandlers(client: RpcClient): Record<string, ToolHandler
 		async read_project(args) {
 			return client.call("project.read", { arg: args.filePath });
 		},
+
+		async open_editor() {
+			return client.call("lifecycle.openEditor");
+		},
+
+		async get_project_state() {
+			return client.call("editor.getState");
+		},
+
+		async add_zoom_region(args) {
+			const focus =
+				typeof args.focusX === "number" && typeof args.focusY === "number"
+					? { cx: args.focusX, cy: args.focusY }
+					: undefined;
+			return client.call("editor.addZoomRegion", {
+				startMs: args.startMs,
+				endMs: args.endMs,
+				depth: args.depth,
+				focus,
+			});
+		},
 	};
 }

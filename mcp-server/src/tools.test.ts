@@ -80,4 +80,42 @@ describe("buildToolHandlers", () => {
 		await handlers.read_project({ filePath: "/tmp/foo.recordly" });
 		expect(client.call).toHaveBeenCalledWith("project.read", { arg: "/tmp/foo.recordly" });
 	});
+
+	it("open_editor calls lifecycle.openEditor with no params", async () => {
+		const client = fakeClient({ "lifecycle.openEditor": undefined });
+		const handlers = buildToolHandlers(client);
+		await handlers.open_editor({});
+		expect(client.call).toHaveBeenCalledWith("lifecycle.openEditor");
+	});
+
+	it("get_project_state calls editor.getState", async () => {
+		const client = fakeClient({ "editor.getState": { zoomRegions: [] } });
+		const handlers = buildToolHandlers(client);
+		expect(await handlers.get_project_state({})).toEqual({ zoomRegions: [] });
+	});
+
+	it("add_zoom_region forwards startMs/endMs/depth and combines focusX/focusY into a focus object", async () => {
+		const client = fakeClient({ "editor.addZoomRegion": { id: "zoom-1" } });
+		const handlers = buildToolHandlers(client);
+		const result = await handlers.add_zoom_region({ startMs: 0, endMs: 1000, depth: 3, focusX: 0.3, focusY: 0.7 });
+		expect(result).toEqual({ id: "zoom-1" });
+		expect(client.call).toHaveBeenCalledWith("editor.addZoomRegion", {
+			startMs: 0,
+			endMs: 1000,
+			depth: 3,
+			focus: { cx: 0.3, cy: 0.7 },
+		});
+	});
+
+	it("add_zoom_region omits focus when focusX/focusY are not both provided", async () => {
+		const client = fakeClient({ "editor.addZoomRegion": { id: "zoom-2" } });
+		const handlers = buildToolHandlers(client);
+		await handlers.add_zoom_region({ startMs: 0, endMs: 1000 });
+		expect(client.call).toHaveBeenCalledWith("editor.addZoomRegion", {
+			startMs: 0,
+			endMs: 1000,
+			depth: undefined,
+			focus: undefined,
+		});
+	});
 });
