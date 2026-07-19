@@ -136,3 +136,35 @@ afterward.
 - `open_editor`'s behavior when an editor window is already open with unsaved changes, or when
   called before any recording/project exists (this run always opened the editor after a recording
   attempt, which sets a "current video path" the editor can load).
+
+## Phase 2b: trim_clip, set_frame_style
+
+**Date:** 2026-07-19
+**Environment:** Real desktop session, macOS (Darwin 25.5.0), via `node smoke-drive.mjs`
+**Result:** ✅ Full end-to-end pass — no flake this run (recording, editor bridge, and both new
+tools all succeeded in one continuous run).
+
+### What was verified live
+
+1. **`set_frame_style`** with `{ borderRadius: 12, shadowIntensity: 40 }` → `{ success: true }`.
+2. **Round-trip verification** — the critical assertion: called `get_project_state` again and
+   confirmed `borderRadius === 12` and `shadowIntensity === 40` in the returned state, proving the
+   change actually persisted in the live renderer (not a stubbed success).
+3. **`trim_clip`** on a real clip region (`firstClip.id` from the just-recorded clip's project
+   state) with adjusted `startMs`/`endMs` → `{ success: true }`. This exercised the real
+   `handleClipSpanChange` code path, including whatever cascade logic it applies to overlapping
+   zoom/annotation/speed regions (none existed to prune in this run beyond the zoom region added
+   moments earlier, which stayed outside the trimmed range).
+4. This run happened to complete without hitting the known pre-existing recording flake (see Phase
+   1/2a sections) — recording, editor bridge, `set_frame_style`, and `trim_clip` all ran in one
+   clean pass, giving `trim_clip` a real clip to operate on (unlike a flaky run, where the smoke
+   driver's fallback logic would have skipped the `trim_clip` verification).
+
+### Not yet verified
+
+- `trim_clip`'s cascade behavior specifically (does trimming actually shift/prune overlapping zoom
+  or annotation regions as `handleClipSpanChange` is designed to?) — this run's trim didn't overlap
+  the added zoom region, so the cascade path itself wasn't exercised, only the basic trim.
+- `padding` (nested object) and `frame` (nullable) fields of `set_frame_style` — this run only
+  exercised `borderRadius`/`shadowIntensity` (flagged as a unit-test gap in Task 3's review too).
+- Remaining editing tools (speed regions, webcam overlay, annotations, captions) — still Phase 2c+.

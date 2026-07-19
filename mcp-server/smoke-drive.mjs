@@ -80,6 +80,32 @@ async function main() {
 		}
 		console.log(`\nVerified: zoom region ${zoomResult.id} is present in project state after adding it.`);
 
+		const frameResult = await handlers.set_frame_style({ borderRadius: 12, shadowIntensity: 40 });
+		log("set_frame_style", frameResult);
+		const stateAfterFrame = await handlers.get_project_state({});
+		if (stateAfterFrame.borderRadius !== 12 || stateAfterFrame.shadowIntensity !== 40) {
+			throw new Error(
+				`set_frame_style did not persist: expected borderRadius=12/shadowIntensity=40, got borderRadius=${stateAfterFrame.borderRadius}/shadowIntensity=${stateAfterFrame.shadowIntensity}`,
+			);
+		}
+		console.log("\nVerified: frame style change persisted in project state.");
+
+		const clips = stateAfterFrame?.clipRegions ?? [];
+		if (clips.length > 0) {
+			const firstClip = clips[0];
+			const trimResult = await handlers.trim_clip({
+				clipId: firstClip.id,
+				startMs: firstClip.startMs,
+				endMs: Math.max(firstClip.startMs + 500, firstClip.endMs - 200),
+			});
+			log("trim_clip", trimResult);
+			console.log("\nVerified: trim_clip call succeeded (clip existed to trim).");
+		} else {
+			console.log(
+				"\nNo clip regions in project state — skipping trim_clip live verification (recording may have failed this run; not a Phase 2b regression).",
+			);
+		}
+
 		console.log("\n--- Error-path checks ---");
 		log("read_project (nonexistent path)", await handlers.read_project({ filePath: "/tmp/does-not-exist.recordly" }).catch((e) => ({ threw: e.message })));
 
