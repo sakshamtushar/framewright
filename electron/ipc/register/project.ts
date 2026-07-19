@@ -2,8 +2,9 @@ import { randomUUID } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { BrowserWindow, dialog, ipcMain, shell } from "electron";
+import { BrowserWindow, dialog, shell } from "electron";
 import { RECORDINGS_DIR } from "../../appPaths";
+import { handle } from "../registry";
 import { buildMediaUrl, getMediaServerBaseUrl } from "../../mediaServer";
 import {
 	LEGACY_PROJECT_FILE_EXTENSIONS,
@@ -214,7 +215,7 @@ async function ensureNamedProjectSaveDoesNotOverwriteDifferentProject(
 }
 
 export function registerProjectHandlers() {
-  ipcMain.handle('reveal-in-folder', async (_, filePath: string) => {
+  handle('reveal-in-folder', async (_, filePath: string) => {
     try {
       // shell.showItemInFolder doesn't return a value, it throws on error
       shell.showItemInFolder(filePath);
@@ -238,7 +239,7 @@ export function registerProjectHandlers() {
     }
   });
 
-  ipcMain.handle('open-recordings-folder', async () => {
+  handle('open-recordings-folder', async () => {
     try {
       const recordingsDir = await getRecordingsDir();
       const openPathResult = await shell.openPath(recordingsDir);
@@ -253,7 +254,7 @@ export function registerProjectHandlers() {
     }
   });
 
-  ipcMain.handle('get-recordings-directory', async () => {
+  handle('get-recordings-directory', async () => {
     try {
       const recordingsDir = await getRecordingsDir()
       return {
@@ -271,7 +272,7 @@ export function registerProjectHandlers() {
     }
   })
 
-  ipcMain.handle('choose-recordings-directory', async () => {
+  handle('choose-recordings-directory', async () => {
     try {
       const current = await getRecordingsDir()
       const result = await dialog.showOpenDialog({
@@ -295,7 +296,7 @@ export function registerProjectHandlers() {
     }
   })
 
-  ipcMain.handle('save-project-file', async (_, projectData: unknown, suggestedName?: string, existingProjectPath?: string, thumbnailDataUrl?: string | null) => {
+  handle('save-project-file', async (_, projectData: unknown, suggestedName?: string, existingProjectPath?: string, thumbnailDataUrl?: string | null) => {
     try {
       const projectsDir = await getProjectsDir()
       const preparedProject = ensureProjectDataHasProjectId(projectData)
@@ -373,7 +374,7 @@ export function registerProjectHandlers() {
     }
   })
 
-    ipcMain.handle('save-project-file-named', async (_, projectData: unknown, projectName: string, thumbnailDataUrl?: string | null, mode?: unknown) => {
+    handle('save-project-file-named', async (_, projectData: unknown, projectName: string, thumbnailDataUrl?: string | null, mode?: unknown) => {
       try {
         const normalizedProjectName = normalizeProjectSaveName(projectName)
         if (!normalizedProjectName) {
@@ -463,7 +464,7 @@ export function registerProjectHandlers() {
       }
     })
 
-  ipcMain.handle('load-project-file', async () => {
+  handle('load-project-file', async () => {
     try {
       const projectsDir = await getProjectsDir()
       const result = await dialog.showOpenDialog({
@@ -492,7 +493,7 @@ export function registerProjectHandlers() {
     }
   })
 
-  ipcMain.handle('load-current-project-file', async () => {
+  handle('load-current-project-file', async () => {
     try {
       if (!currentProjectPath) {
         return { success: false, message: 'No active project' }
@@ -509,7 +510,7 @@ export function registerProjectHandlers() {
     }
   })
 
-  ipcMain.handle('get-projects-directory', async () => {
+  handle('get-projects-directory', async () => {
     try {
       return {
         success: true,
@@ -523,7 +524,7 @@ export function registerProjectHandlers() {
     }
   })
 
-  ipcMain.handle('list-project-files', async () => {
+  handle('list-project-files', async () => {
     try {
       const library = await listProjectLibraryEntries()
       return {
@@ -541,7 +542,7 @@ export function registerProjectHandlers() {
     }
   })
 
-  ipcMain.handle('open-project-file-at-path', async (_, filePath: string) => {
+  handle('open-project-file-at-path', async (_, filePath: string) => {
     try {
       return await loadProjectFromPath(filePath)
     } catch (error) {
@@ -554,7 +555,7 @@ export function registerProjectHandlers() {
     }
   })
 
-  ipcMain.handle('open-projects-directory', async () => {
+  handle('open-projects-directory', async () => {
     try {
       const projectsDir = await getProjectsDir()
       const openPathResult = await shell.openPath(projectsDir)
@@ -568,7 +569,7 @@ export function registerProjectHandlers() {
       return { success: false, error: String(error), message: 'Failed to open projects folder.' }
     }
   })
-  ipcMain.handle('set-current-video-path', async (_, path: string, options?: { preserveProjectPath?: boolean; hideOverlayCursorByDefault?: boolean }) => {
+  handle('set-current-video-path', async (_, path: string, options?: { preserveProjectPath?: boolean; hideOverlayCursorByDefault?: boolean }) => {
     setCurrentVideoPath(normalizeVideoSourcePath(path) ?? path)
     approveUserPath(currentVideoPath)
     const resolvedSession = await resolveRecordingSession(currentVideoPath)
@@ -608,7 +609,7 @@ export function registerProjectHandlers() {
     return { success: true, webcamPath: nextSession.webcamPath ?? null }
   })
 
-  ipcMain.handle('set-current-recording-session', async (_, session: { videoPath: string; webcamPath?: string | null; timeOffsetMs?: number; hideOverlayCursorByDefault?: boolean }, options?: { preserveProjectPath?: boolean }) => {
+  handle('set-current-recording-session', async (_, session: { videoPath: string; webcamPath?: string | null; timeOffsetMs?: number; hideOverlayCursorByDefault?: boolean }, options?: { preserveProjectPath?: boolean }) => {
     const normalizedVideoPath = normalizeVideoSourcePath(session.videoPath) ?? session.videoPath
     setCurrentVideoPath(normalizedVideoPath)
     setCurrentRecordingSession({
@@ -633,7 +634,7 @@ export function registerProjectHandlers() {
     return { success: true }
   })
 
-  ipcMain.handle('get-current-recording-session', () => {
+  handle('get-current-recording-session', () => {
     if (!currentRecordingSession) {
       return { success: false }
     }
@@ -644,17 +645,17 @@ export function registerProjectHandlers() {
     }
   })
 
-  ipcMain.handle('get-current-video-path', () => {
+  handle('get-current-video-path', () => {
     return currentVideoPath ? { success: true, path: currentVideoPath } : { success: false };
   });
 
-  ipcMain.handle('clear-current-video-path', () => {
+  handle('clear-current-video-path', () => {
     setCurrentVideoPath(null);
     setCurrentRecordingSession(null);
     return { success: true };
   });
 
-  ipcMain.handle('delete-recording-file', async (_, filePath: string) => {
+  handle('delete-recording-file', async (_, filePath: string) => {
     try {
       if (!filePath) {
         return { success: false, error: 'Only auto-generated recordings can be deleted' };
@@ -682,7 +683,7 @@ export function registerProjectHandlers() {
     }
   });
 
-  ipcMain.handle('get-local-media-url', async (_, filePath: string) => {
+  handle('get-local-media-url', async (_, filePath: string) => {
     const baseUrl = getMediaServerBaseUrl();
     if (!baseUrl || !filePath) {
       return { success: false as const };

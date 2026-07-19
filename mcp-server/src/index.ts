@@ -32,8 +32,6 @@ async function main() {
 			sourceId: z.string(),
 			sourceType: z.enum(["screen", "window"]),
 			displayId: z.string().optional(),
-			capturesSystemAudio: z.boolean().optional(),
-			capturesMicrophone: z.boolean().optional(),
 		},
 		async (args) => toContent(await handlers.start_recording(args)),
 	);

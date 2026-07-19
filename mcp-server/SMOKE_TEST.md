@@ -73,3 +73,5 @@ If any platform-specific behavior differs from what's documented here (e.g. ffmp
 - MCP inspector or Claude Code/Desktop with MCP support configured
 
 The MCP server code itself appears ready (builds cleanly), but integration verification requires the full application stack to be functional and interactive.
+
+**Addendum:** The `bufferutil` startup blocker described above was subsequently fixed later on this branch (`vite.config.ts` now externalizes `ws`/`bufferutil`/`utf-8-validate`). The full smoke test should be re-attempted now that this prerequisite failure is resolved.
