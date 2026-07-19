@@ -177,6 +177,36 @@ describe("dispatchRpcRequest", () => {
 
 		expect(response).toEqual({ jsonrpc: "2.0", id: 13, result: undefined });
 	});
+
+	it("editor.trimClip forwards params directly as the payload", async () => {
+		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ success: true });
+
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 20,
+			method: "editor.trimClip",
+			params: { clipId: "clip-1", startMs: 0, endMs: 5000 },
+		});
+
+		expect(spy).toHaveBeenCalledWith("trimClip", { clipId: "clip-1", startMs: 0, endMs: 5000 });
+		expect(response).toEqual({ jsonrpc: "2.0", id: 20, result: { success: true } });
+		spy.mockRestore();
+	});
+
+	it("editor.setFrameStyle forwards params directly as the payload", async () => {
+		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ success: true });
+
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 21,
+			method: "editor.setFrameStyle",
+			params: { wallpaper: "gradient-1", borderRadius: 12 },
+		});
+
+		expect(spy).toHaveBeenCalledWith("setFrameStyle", { wallpaper: "gradient-1", borderRadius: 12 });
+		expect(response).toEqual({ jsonrpc: "2.0", id: 21, result: { success: true } });
+		spy.mockRestore();
+	});
 });
 
 describe("registerProjectHandlers", () => {

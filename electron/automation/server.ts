@@ -77,6 +77,8 @@ export async function dispatchRpcRequest(request: RpcRequest): Promise<RpcRespon
 		const EDITOR_BRIDGE_METHODS: Record<string, string> = {
 			"editor.getState": "getState",
 			"editor.addZoomRegion": "addZoomRegion",
+			"editor.trimClip": "trimClip",
+			"editor.setFrameStyle": "setFrameStyle",
 		};
 		const editorBridgeType = EDITOR_BRIDGE_METHODS[request.method];
 		if (editorBridgeType) {
