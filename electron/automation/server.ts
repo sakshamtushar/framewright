@@ -79,6 +79,8 @@ export async function dispatchRpcRequest(request: RpcRequest): Promise<RpcRespon
 			"editor.addZoomRegion": "addZoomRegion",
 			"editor.trimClip": "trimClip",
 			"editor.setFrameStyle": "setFrameStyle",
+			"editor.setWebcamOverlay": "setWebcamOverlay",
+			"editor.addAnnotation": "addAnnotation",
 		};
 		const editorBridgeType = EDITOR_BRIDGE_METHODS[request.method];
 		if (editorBridgeType) {

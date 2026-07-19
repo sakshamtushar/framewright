@@ -207,6 +207,32 @@ describe("dispatchRpcRequest", () => {
 		expect(response).toEqual({ jsonrpc: "2.0", id: 21, result: { success: true } });
 		spy.mockRestore();
 	});
+
+	it("editor.setWebcamOverlay forwards params directly as the payload", async () => {
+		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ success: true });
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 30,
+			method: "editor.setWebcamOverlay",
+			params: { enabled: true, mirror: true },
+		});
+		expect(spy).toHaveBeenCalledWith("setWebcamOverlay", { enabled: true, mirror: true });
+		expect(response).toEqual({ jsonrpc: "2.0", id: 30, result: { success: true } });
+		spy.mockRestore();
+	});
+
+	it("editor.addAnnotation forwards params directly as the payload", async () => {
+		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ id: "annotation-1" });
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 31,
+			method: "editor.addAnnotation",
+			params: { startMs: 0, endMs: 2000, content: "Hello" },
+		});
+		expect(spy).toHaveBeenCalledWith("addAnnotation", { startMs: 0, endMs: 2000, content: "Hello" });
+		expect(response).toEqual({ jsonrpc: "2.0", id: 31, result: { id: "annotation-1" } });
+		spy.mockRestore();
+	});
 });
 
 describe("registerProjectHandlers", () => {
