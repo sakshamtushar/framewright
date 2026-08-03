@@ -199,3 +199,58 @@ region, frame style, clip trim, webcam overlay, and annotation — every one suc
   see this phase's plan for why (`add_speed_region` needs its own design given
   `handleClipSpeedChange`'s more complex overlap-blocking contract; captions are async/long-running,
   a different shape than the synchronous operations covered so far).
+
+## Framewright rebrand — Phase A verification
+
+**Date:** 2026-07-19
+**Environment:** Real desktop session, macOS (Darwin 25.5.0), via `node smoke-drive.mjs` (package
+now named `framewright-mcp-server`)
+**Result:** ✅ Full end-to-end pass. Every renamed invariant from the rebrand plan was exercised
+live and confirmed correct.
+
+### What was verified live
+
+1. **Spawn path under the new name** — `getOrCreateConnection` spawned `npm run dev` with the
+   renamed `FRAMEWRIGHT_MCP_TOKEN` env var, and the lockfile appeared at the renamed path
+   (`~/Library/Application Support/Framewright-dev/mcp.lock.json`), confirming the
+   `electron/appPaths.ts` ↔ `mcp-server/src/paths.ts` dev-path string and the
+   `RECORDLY_MCP_TOKEN` → `FRAMEWRIGHT_MCP_TOKEN` producer/consumer pair (Task 2, the highest-risk
+   task in the plan) are genuinely in sync — a mismatch here would have caused a silent spawn
+   timeout instead of a clean connect.
+2. **`list_capture_sources`** → returned 25 real sources with no crash and no sign of the app's own
+   window being mis-included/excluded, confirming the own-window-exclusion rename (Task 4, across
+   `sources.ts` and `recording.ts`) didn't break source enumeration.
+3. **`list_projects`** → `projectsDir` correctly resolved under
+   `.../Framewright-dev/recordings/Projects`.
+4. **Recording lifecycle, editor bridge (`open_editor`/`get_project_state`/`add_zoom_region`/
+   `set_frame_style`/`set_webcam_overlay`/`add_annotation`)** — all succeeded exactly as in prior
+   phases, each write confirmed to persist via a follow-up `get_project_state` read. `trim_clip`
+   itself wasn't re-exercised this run (see the known flake below), but nothing in this rebrand
+   phase touches clip/trim logic — it was already thoroughly live-verified under the old name in
+   Phase 2b and remains untouched here.
+5. **Legacy `.recordly` project file compatibility (Task 1's core purpose)** — manually placed a
+   hand-crafted `legacy-test.recordly` file in the projects directory (referencing a real, empty
+   dummy video file) and confirmed via a short one-off script exercising the real
+   `getOrCreateConnection`/`buildToolHandlers` code path:
+   - `list_projects` correctly discovered and listed the `.recordly` file alongside its `.json`
+     project metadata, proving `LEGACY_PROJECT_FILE_EXTENSIONS = ["openscreen", "recordly"]`
+     (Task 1) is genuinely wired into the project-scanning logic, not just declared.
+   - `read_project` on that legacy file returned `{ success: true, project: {...} }` with the
+     correct parsed contents — full read-path compatibility confirmed, not just discoverability.
+
+### Known flake reproduced again (see Phase 1/2a/2b/2c sections above)
+
+The same pre-existing "moov atom not found" native-layer flake hit on both runs this session
+(back-to-back), always on `stop_recording` right after a pause→resume. This is unrelated to the
+rebrand — nothing in this plan touches the recording pipeline — but it's now been observed more
+consistently across recent sessions and is worth prioritizing as a real follow-up investigation
+rather than treating as a rare fluke.
+
+### Not yet verified
+
+- Cosmetic/UI-facing rebrand work is explicitly out of scope for this phase (icons, i18n locale
+  files, notification text, documentation prose, localStorage key migration) — see the plan's
+  "What's deliberately out of scope" section. The app is functionally Framewright but still visually
+  presents old Recordly icons/some UI text until Phase B.
+- Windows/Linux verification of any of the above — still macOS-only, consistent with every prior
+  phase.
