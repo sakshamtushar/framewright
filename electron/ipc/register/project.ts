@@ -14,6 +14,7 @@ import { getProjectBackupPath, writeProjectFileAtomically } from "../project/ato
 import {
 	getProjectsDir,
   getProjectThumbnailPath,
+	hasProjectFileExtension,
 	isPathInsideDirectory,
 	isTrustedProjectPath,
 	listProjectLibraryEntries,
@@ -67,7 +68,7 @@ function normalizeProjectSaveName(projectName?: string | null) {
   }
 
   const withoutExtension = trimmedName.replace(
-    new RegExp(`\\.${PROJECT_FILE_EXTENSION}$`, "i"),
+    new RegExp(`\\.(${[PROJECT_FILE_EXTENSION, ...LEGACY_PROJECT_FILE_EXTENSIONS].join("|")})$`, "i"),
     "",
   );
   const withoutInvalidFilesystemChars = withoutExtension.replace(/[<>:"/\\|?*]/g, "");
@@ -301,7 +302,7 @@ export function registerProjectHandlers() {
       const projectsDir = await getProjectsDir()
       const preparedProject = ensureProjectDataHasProjectId(projectData)
       const trustedExistingProjectPath = existingProjectPath &&
-        path.extname(existingProjectPath).toLowerCase() === `.${PROJECT_FILE_EXTENSION}` &&
+        hasProjectFileExtension(existingProjectPath) &&
         (isTrustedProjectPath(existingProjectPath) || isPathInsideDirectory(existingProjectPath, projectsDir))
         ? path.resolve(existingProjectPath)
         : null

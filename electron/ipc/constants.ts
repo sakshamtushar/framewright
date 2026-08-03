@@ -16,6 +16,7 @@ export const AUTO_RECORDING_RETENTION_COUNT = 20;
 export const AUTO_RECORDING_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 export const ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE = Boolean(process.env["VITE_DEV_SERVER_URL"]);
 export const RECORDING_SESSION_MANIFEST_SUFFIX = ".framewright-session.json";
+export const LEGACY_RECORDING_SESSION_MANIFEST_SUFFIX = ".recordly-session.json";
 export const WHISPER_MODEL_DOWNLOAD_URL =
 	"https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin";
 export const WHISPER_MODEL_DIR = path.join(USER_DATA_PATH, "whisper");

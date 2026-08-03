@@ -202,6 +202,17 @@ describe("local media path policy", () => {
 		await expect(resolveApprovedLocalMediaPath(videoPath)).resolves.toBeNull();
 	});
 
+	it("accepts the current project extension and legacy extensions kept for backward compatibility", async () => {
+		const { hasProjectFileExtension } = await import("./manager");
+
+		expect(hasProjectFileExtension("/projects/demo.framewright")).toBe(true);
+		expect(hasProjectFileExtension("/projects/demo.recordly")).toBe(true);
+		expect(hasProjectFileExtension("/projects/demo.openscreen")).toBe(true);
+		expect(hasProjectFileExtension("/projects/demo.FRAMEWRIGHT")).toBe(true);
+		expect(hasProjectFileExtension("/projects/demo.RECORDLY")).toBe(true);
+		expect(hasProjectFileExtension("/projects/demo.txt")).toBe(false);
+	});
+
 	it("approves editor audioRegions audioPath entries when loading a project", async () => {
 		const downloadsPath = path.join(tempRoot, "Downloads");
 		const videoPath = path.join(tempPath, "recording.mp4");

@@ -1,7 +1,10 @@
 import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { RECORDING_SESSION_MANIFEST_SUFFIX } from "../constants";
+import {
+	LEGACY_RECORDING_SESSION_MANIFEST_SUFFIX,
+	RECORDING_SESSION_MANIFEST_SUFFIX,
+} from "../constants";
 import type { RecordingSessionData, RecordingSessionManifest } from "../types";
 import { normalizeVideoSourcePath, parseJsonWithByteOrderMark } from "../utils";
 
@@ -13,6 +16,20 @@ export function getRecordingSessionManifestPath(videoPath: string) {
 	const extension = path.extname(videoPath);
 	const baseName = path.basename(videoPath, extension);
 	return path.join(path.dirname(videoPath), `${baseName}${RECORDING_SESSION_MANIFEST_SUFFIX}`);
+}
+
+/**
+ * Path to the legacy (pre-rebrand) recording-session manifest sidecar file.
+ * Only used as a read fallback for recordings made before the Framewright
+ * rename — new recordings always write RECORDING_SESSION_MANIFEST_SUFFIX.
+ */
+function getLegacyRecordingSessionManifestPath(videoPath: string) {
+	const extension = path.extname(videoPath);
+	const baseName = path.basename(videoPath, extension);
+	return path.join(
+		path.dirname(videoPath),
+		`${baseName}${LEGACY_RECORDING_SESSION_MANIFEST_SUFFIX}`,
+	);
 }
 
 export async function persistRecordingSessionManifest(session: RecordingSessionData): Promise<void> {
@@ -49,8 +66,21 @@ export async function resolveRecordingSessionManifest(
 
 	const manifestPath = getRecordingSessionManifestPath(normalizedVideoPath);
 
+	let content: string;
 	try {
-		const content = await fs.readFile(manifestPath, "utf-8");
+		content = await fs.readFile(manifestPath, "utf-8");
+	} catch {
+		// Fall back to the pre-rebrand sidecar name so recordings made before
+		// the Framewright rename still resolve their linked webcam/offset data.
+		const legacyManifestPath = getLegacyRecordingSessionManifestPath(normalizedVideoPath);
+		try {
+			content = await fs.readFile(legacyManifestPath, "utf-8");
+		} catch {
+			return null;
+		}
+	}
+
+	try {
 		const parsed =
 			parseJsonWithByteOrderMark<Partial<RecordingSessionManifest>>(content);
 		if (parsed.version !== 1 && parsed.version !== 2) {
