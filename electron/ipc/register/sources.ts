@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { app, BrowserWindow, desktopCapturer } from "electron";
 import { handle } from "../registry";
-import { ALLOW_RECORDLY_WINDOW_CAPTURE } from "../constants";
+import { ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE } from "../constants";
 import { selectedSource, setSelectedSource } from "../state";
 import type { SelectedSource } from "../types";
 import { getScreen, parseWindowId } from "../utils";
@@ -151,7 +151,7 @@ export function registerSourceHandlers({
 						return true;
 					}
 
-					if (ALLOW_RECORDLY_WINDOW_CAPTURE && normalizedName.includes("recordly")) {
+					if (ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE && normalizedName.includes("recordly")) {
 						return true;
 					}
 
@@ -199,7 +199,7 @@ export function registerSourceHandlers({
 					const normalizedAppName = normalizeDesktopSourceName(source.appName ?? "");
 
 					if (
-						!ALLOW_RECORDLY_WINDOW_CAPTURE &&
+						!ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE &&
 						normalizedAppName &&
 						normalizedAppName === ownAppName
 					) {
@@ -207,7 +207,7 @@ export function registerSourceHandlers({
 					}
 
 					if (
-						ALLOW_RECORDLY_WINDOW_CAPTURE &&
+						ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE &&
 						(normalizedAppName === "recordly" ||
 							normalizedWindowName?.includes("recordly"))
 					) {
@@ -268,7 +268,7 @@ export function registerSourceHandlers({
 						return true;
 					}
 
-					if (ALLOW_RECORDLY_WINDOW_CAPTURE && normalizedName.includes("recordly")) {
+					if (ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE && normalizedName.includes("recordly")) {
 						return true;
 					}
 

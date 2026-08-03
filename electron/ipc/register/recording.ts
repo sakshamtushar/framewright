@@ -14,7 +14,7 @@ import {
 import { handle } from "../registry";
 import { showCursor } from "../../cursorHider";
 import { getMonitorHandles } from "../monitorResolver";
-import { ALLOW_RECORDLY_WINDOW_CAPTURE } from "../constants";
+import { ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE } from "../constants";
 import { startWindowBoundsCapture, stopWindowBoundsCapture } from "../cursor/bounds";
 import { startInteractionCapture, stopInteractionCapture } from "../cursor/interaction";
 import { startNativeCursorMonitor, stopNativeCursorMonitor } from "../cursor/monitor";
@@ -689,7 +689,7 @@ export function registerRecordingHandlers(
 				const appName = normalizeDesktopSourceName(String(source?.appName ?? ""));
 				const ownAppName = normalizeDesktopSourceName(app.getName());
 				if (
-					!ALLOW_RECORDLY_WINDOW_CAPTURE &&
+					!ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE &&
 					source?.id?.startsWith("window:") &&
 					appName &&
 					(appName === ownAppName || appName === "recordly")
