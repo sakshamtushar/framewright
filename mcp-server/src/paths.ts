@@ -1,14 +1,14 @@
 import path from "node:path";
 import os from "node:os";
 
-const APP_DATA_DIR_NAME = "Recordly-dev";
+const APP_DATA_DIR_NAME = "Framewright-dev";
 const LOCKFILE_NAME = "mcp.lock.json";
 
 /**
  * Mirrors electron/appPaths.ts's dev-mode userData path
- * (path.join(app.getPath("appData"), "Recordly-dev")) without depending on Electron.
+ * (path.join(app.getPath("appData"), "Framewright-dev")) without depending on Electron.
  */
-export function getRecordlyDevUserDataPath(
+export function getFramewrightDevUserDataPath(
 	platform: NodeJS.Platform = process.platform,
 	homedir: string = os.homedir(),
 	appDataEnv: string | undefined = process.env.APPDATA,
@@ -29,5 +29,5 @@ export function getLockfilePath(
 	homedir: string = os.homedir(),
 	appDataEnv: string | undefined = process.env.APPDATA,
 ): string {
-	return path.join(getRecordlyDevUserDataPath(platform, homedir, appDataEnv), LOCKFILE_NAME);
+	return path.join(getFramewrightDevUserDataPath(platform, homedir, appDataEnv), LOCKFILE_NAME);
 }

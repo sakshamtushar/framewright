@@ -21,7 +21,7 @@ export async function getOrCreateConnection(options: {
 	const token = crypto.randomUUID();
 	spawn("npm", ["run", "dev"], {
 		cwd: options.repoDir,
-		env: { ...process.env, RECORDLY_MCP_TOKEN: token },
+		env: { ...process.env, FRAMEWRIGHT_MCP_TOKEN: token },
 		detached: true,
 		stdio: "ignore",
 	}).unref();
@@ -36,6 +36,6 @@ export async function getOrCreateConnection(options: {
 	}
 
 	throw new Error(
-		"Timed out waiting for Recordly to start. Check that `npm run dev` succeeds in the Recordly repo.",
+		"Timed out waiting for Framewright to start. Check that `npm run dev` succeeds in the Recordly repo.",
 	);
 }

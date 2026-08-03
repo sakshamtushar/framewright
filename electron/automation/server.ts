@@ -114,7 +114,7 @@ export async function dispatchRpcRequest(request: RpcRequest): Promise<RpcRespon
 let wss: WebSocketServer | null = null;
 
 export async function startAutomationServerIfRequested(): Promise<void> {
-	const token = process.env.RECORDLY_MCP_TOKEN;
+	const token = process.env.FRAMEWRIGHT_MCP_TOKEN;
 	if (!token) {
 		return;
 	}
@@ -163,7 +163,7 @@ export async function stopAutomationServer(): Promise<void> {
 	}
 }
 
-// Exposed for RECORDLY_MCP_TOKEN generation callers (Task 4).
+// Exposed for FRAMEWRIGHT_MCP_TOKEN generation callers (Task 4).
 export function generateAutomationToken(): string {
 	return randomBytes(24).toString("hex");
 }
