@@ -692,7 +692,7 @@ export function registerRecordingHandlers(
 					!ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE &&
 					source?.id?.startsWith("window:") &&
 					appName &&
-					(appName === ownAppName || appName === "recordly")
+					(appName === ownAppName || appName === "framewright")
 				) {
 					return {
 						success: false,

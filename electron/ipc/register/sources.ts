@@ -83,7 +83,7 @@ export function registerSourceHandlers({
 		const ownWindowNames = new Set(
 			[
 				app.getName(),
-				"Recordly",
+				"Framewright",
 				...BrowserWindow.getAllWindows().flatMap((win) => {
 					const title = win.getTitle().trim();
 					return title ? [title] : [];
@@ -151,7 +151,7 @@ export function registerSourceHandlers({
 						return true;
 					}
 
-					if (ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE && normalizedName.includes("recordly")) {
+					if (ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE && normalizedName.includes("framewright")) {
 						return true;
 					}
 
@@ -208,8 +208,8 @@ export function registerSourceHandlers({
 
 					if (
 						ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE &&
-						(normalizedAppName === "recordly" ||
-							normalizedWindowName?.includes("recordly"))
+						(normalizedAppName === "framewright" ||
+							normalizedWindowName?.includes("framewright"))
 					) {
 						return true;
 					}
@@ -268,7 +268,7 @@ export function registerSourceHandlers({
 						return true;
 					}
 
-					if (ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE && normalizedName.includes("recordly")) {
+					if (ALLOW_FRAMEWRIGHT_WINDOW_CAPTURE && normalizedName.includes("framewright")) {
 						return true;
 					}
 
