@@ -107,7 +107,7 @@
     ],
     "icon": "icons/icons/win/icon.ico"
     ,
-    "executableName": "Recordly",
+    "executableName": "Framewright",
     "artifactName": "${productName}-windows-${arch}.${ext}"
   }
 }
