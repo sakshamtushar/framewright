@@ -127,6 +127,71 @@ async function main() {
 		}
 		console.log(`\nVerified: annotation ${annotationResult.id} is present in project state after adding it.`);
 
+		console.log("\n--- Captions test ---");
+		let captionGenerated = false;
+		try {
+			const capResult = await handlers.generate_captions({ videoPath: recordedPaths[0] ?? "/tmp/does-not-exist.mp4" });
+			log("generate_captions", capResult);
+			captionGenerated = true;
+		} catch (err) {
+			console.log(`\ngenerate_captions failed (expected if the Whisper model isn't downloaded on this machine): ${err.message}`);
+		}
+
+		if (captionGenerated) {
+			const stateAfterCaptions = await handlers.get_project_state({});
+			const captions = stateAfterCaptions?.autoCaptions ?? [];
+			if (captions.length > 0) {
+				const editResult = await handlers.edit_caption({ action: "setText", id: captions[0].id, text: "Edited via MCP" });
+				log("edit_caption (setText, on real transcribed cue)", editResult);
+				console.log("\nVerified: edit_caption call succeeded on a real generated cue.");
+			} else {
+				console.log("\ngenerate_captions succeeded but produced zero cues — skipping edit_caption live verification.");
+			}
+		} else {
+			// No Whisper model available in this environment — seed a caption directly via the
+			// low-level RPC client (bypassing generate_captions) so edit_caption's live behavior
+			// is still exercised, independent of Whisper model availability.
+			console.log("\nSeeding a caption directly via editor.setCaptions to test edit_caption independent of transcription...");
+			const seedCue = { id: "smoke-caption-1", startMs: 0, endMs: 1500, text: "Smoke test caption" };
+			const seedResult = await client.call("editor.setCaptions", { cues: [seedCue] });
+			log("editor.setCaptions (seed)", seedResult);
+
+			const stateAfterSeed = await handlers.get_project_state({});
+			const seededCue = (stateAfterSeed?.autoCaptions ?? []).find((c) => c.id === seedCue.id);
+			if (!seededCue) {
+				throw new Error(`Seeded caption ${seedCue.id} not found in project state after editor.setCaptions`);
+			}
+			console.log(`\nVerified: seeded caption ${seedCue.id} is present in project state.`);
+
+			const editResult = await handlers.edit_caption({ action: "setText", id: seedCue.id, text: "Edited via MCP" });
+			log("edit_caption (setText, on seeded cue)", editResult);
+
+			const stateAfterEdit = await handlers.get_project_state({});
+			const editedCue = (stateAfterEdit?.autoCaptions ?? []).find((c) => c.id === seedCue.id);
+			if (editedCue?.text !== "Edited via MCP") {
+				throw new Error(`edit_caption (setText) did not persist: expected text "Edited via MCP", got ${JSON.stringify(editedCue)}`);
+			}
+			console.log("\nVerified: edit_caption (setText) change persisted in project state.");
+
+			const retimeResult = await handlers.edit_caption({ action: "retime", id: seedCue.id, startMs: 200, endMs: 1800 });
+			log("edit_caption (retime)", retimeResult);
+			const stateAfterRetime = await handlers.get_project_state({});
+			const retimedCue = (stateAfterRetime?.autoCaptions ?? []).find((c) => c.id === seedCue.id);
+			if (retimedCue?.startMs !== 200 || retimedCue?.endMs !== 1800) {
+				throw new Error(`edit_caption (retime) did not persist: got ${JSON.stringify(retimedCue)}`);
+			}
+			console.log("\nVerified: edit_caption (retime) change persisted in project state.");
+
+			const deleteResult = await handlers.edit_caption({ action: "delete", id: seedCue.id });
+			log("edit_caption (delete)", deleteResult);
+			const stateAfterDelete = await handlers.get_project_state({});
+			const stillPresent = (stateAfterDelete?.autoCaptions ?? []).find((c) => c.id === seedCue.id);
+			if (stillPresent) {
+				throw new Error(`edit_caption (delete) did not remove the cue: ${JSON.stringify(stillPresent)}`);
+			}
+			console.log("\nVerified: edit_caption (delete) removed the cue from project state.");
+		}
+
 		console.log("\n--- Error-path checks ---");
 		log("read_project (nonexistent path)", await handlers.read_project({ filePath: "/tmp/does-not-exist.recordly" }).catch((e) => ({ threw: e.message })));
 

@@ -9,6 +9,7 @@ import {
 } from "../captions/whisper";
 import { LEGACY_PROJECT_FILE_EXTENSIONS, PROJECT_FILE_EXTENSION } from "../constants";
 import { hasProjectFileExtension, loadProjectFromPath } from "../project/manager";
+import { handle } from "../registry";
 import { setCurrentProjectPath } from "../state";
 import { approveUserPath, getRecordingsDir } from "../utils";
 
@@ -221,7 +222,7 @@ export function registerCaptionHandlers() {
 		}
 	});
 
-	ipcMain.handle(
+	handle(
 		"generate-auto-captions",
 		async (
 			_,

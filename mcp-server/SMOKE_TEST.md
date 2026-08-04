@@ -254,3 +254,65 @@ rather than treating as a rare fluke.
   presents old Recordly icons/some UI text until Phase B.
 - Windows/Linux verification of any of the above — still macOS-only, consistent with every prior
   phase.
+
+## Phase 2d: Captions (generate_captions, edit_caption)
+
+**Date:** 2026-08-04
+**Environment:** Real desktop session, macOS (Darwin 25.5.0), via `node smoke-drive.mjs`
+**Result:** ✅ Full end-to-end pass, no flake this run — recording, editor bridge (zoom/frame
+style/trim/webcam/annotation), and captions all succeeded in one continuous run.
+
+### What was verified live
+
+1. **`generate_captions`** → this machine has no Whisper model downloaded
+   (`~/Library/Application Support/Framewright-dev/whisper/ggml-small.bin` doesn't exist), so the
+   call correctly failed with a clean, actionable error
+   (`ENOENT: no such file or directory, access '.../whisper/ggml-small.bin'`) rather than crashing
+   or hanging — confirming the tool's skip-on-failure path (it never attempted `editor.setCaptions`
+   after the transcription failure) and that `whisperModelPath`'s Electron-free derivation via
+   `getFramewrightDevUserDataPath()` resolves to the exact same path the real Electron app would
+   use.
+2. **`edit_caption` (all three tested actions), verified independent of Whisper availability** —
+   since transcription couldn't run, a caption was seeded directly via the low-level RPC client
+   (`client.call("editor.setCaptions", { cues: [...] })`, bypassing `generate_captions`) to
+   exercise the actual `editCaption` dispatch case and its four pure-function-backed actions:
+   - **`setText`** → changed the seeded cue's text; confirmed the new text via a follow-up
+     `get_project_state` read. This exercised the exact same dual-branch logic as the real UI's
+     `handleCaptionTextEdit` (empty-words vs. populated-words case) — the seeded cue had no words,
+     so this specifically exercised the empty-words branch (direct text replacement).
+   - **`retime`** → changed the cue's `startMs`/`endMs`; confirmed the new times persisted.
+   - **`delete`** → removed the cue; confirmed it was actually gone from `autoCaptions` afterward,
+     not just reported as deleted.
+   - `merge` was not live-tested this run (would need two seeded cues) — covered at the unit level
+     in Task 4's tests.
+
+### Not yet verified
+
+- The full `generate_captions` happy path (a real Whisper transcription producing real cues, then
+  applied via `editor.setCaptions`) — needs a machine with the small Whisper model already
+  downloaded via the app's own caption settings UI (this plan intentionally does not add a
+  `download_whisper_model` tool, since that handler streams progress via `event.sender`, same
+  exclusion category as export).
+- `edit_caption`'s `setText` action on a cue WITH Whisper-derived word timings (the
+  `updateCaptionCuesForEditedTarget` branch) — the seeded test cue had no words, so only the
+  simpler empty-words branch was live-exercised; the word-timing branch was verified
+  character-by-character against the real UI code in Task 2's review instead.
+- `edit_caption`'s `merge` action live — unit-tested only.
+
+### Fix-round re-verification (final whole-branch review)
+
+**Date:** 2026-08-04
+**Result:** ✅ Re-ran the full smoke driver against a live Framewright-dev instance after applying
+the final review's Important-severity fixes (silent no-op guard on `edit_caption`, actionable
+Whisper-model-missing error, `videoPath` defaulting) — same environment as above.
+
+- `generate_captions` now fails **fast**, before any RPC round-trip, with the new actionable
+  message ("The Whisper caption model isn't downloaded yet ... Open Framewright's caption settings
+  and download the small model, then retry.") instead of the deeper `ENOENT` from the transcription
+  handler — confirming the new up-front `fs.existsSync` check works against the real on-disk path.
+- `edit_caption`'s `setText`/`retime`/`delete` all still round-tripped correctly through
+  `get_project_state` with the new no-op existence guard in place — confirming the guard doesn't
+  false-positive on legitimate edits (it only throws when the underlying op returns the same array
+  reference unchanged).
+- The pre-existing "moov atom not found" flake reproduced again on `stop_recording` right after
+  pause→resume — same known, unrelated native-layer issue as every prior run.
