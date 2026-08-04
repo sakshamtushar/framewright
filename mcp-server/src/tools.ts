@@ -1,3 +1,5 @@
+import path from "node:path";
+import { getFramewrightDevUserDataPath } from "./paths.js";
 import type { RpcClient } from "./rpcClient.js";
 
 type ToolHandler = (args: Record<string, unknown>) => Promise<unknown>;
@@ -90,6 +92,21 @@ export function buildToolHandlers(client: RpcClient): Record<string, ToolHandler
 
 		async add_annotation(args) {
 			return client.call("editor.addAnnotation", args);
+		},
+
+		async generate_captions(args) {
+			const whisperModelPath = path.join(getFramewrightDevUserDataPath(), "whisper", "ggml-small.bin");
+			const genResult = (await client.call("captions.generate", {
+				arg: { videoPath: args.videoPath, whisperModelPath, language: args.language },
+			})) as { success: boolean; cues?: unknown[]; error?: string; message?: string };
+			if (!genResult.success) {
+				throw new Error(genResult.error ?? genResult.message ?? "Caption generation failed");
+			}
+			return client.call("editor.setCaptions", { cues: genResult.cues });
+		},
+
+		async edit_caption(args) {
+			return client.call("editor.editCaption", args);
 		},
 	};
 }

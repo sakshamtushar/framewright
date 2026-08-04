@@ -171,6 +171,28 @@ async function main() {
 		async (args) => toContent(await handlers.add_annotation(args)),
 	);
 
+	server.tool(
+		"generate_captions",
+		"Transcribe a video's audio into caption cues using the locally downloaded Whisper model, and apply them to the currently open editor. Requires the small Whisper model to already be downloaded (via the Recordly/Framewright app's caption settings UI) — fails with a clear error otherwise.",
+		{ videoPath: z.string(), language: z.string().optional() },
+		async (args) => toContent(await handlers.generate_captions(args)),
+	);
+
+	server.tool(
+		"edit_caption",
+		"Edit an existing caption cue on the currently open editor's timeline: change its text, retime it, split it, merge it with another cue, or delete it.",
+		{
+			action: z.enum(["setText", "retime", "split", "merge", "delete"]),
+			id: z.string(),
+			text: z.string().optional(),
+			startMs: z.number().optional(),
+			endMs: z.number().optional(),
+			atMs: z.number().optional(),
+			mergeWithId: z.string().optional(),
+		},
+		async (args) => toContent(await handlers.edit_caption(args)),
+	);
+
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
 }

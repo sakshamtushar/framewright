@@ -150,4 +150,38 @@ describe("buildToolHandlers", () => {
 		expect(result).toEqual({ id: "annotation-1" });
 		expect(client.call).toHaveBeenCalledWith("editor.addAnnotation", { startMs: 0, endMs: 2000, content: "Hello" });
 	});
+
+	it("generate_captions calls captions.generate then editor.setCaptions on success", async () => {
+		const client = fakeClient({
+			"captions.generate": { success: true, cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }], message: "ok" },
+			"editor.setCaptions": { success: true, count: 1 },
+		});
+		const handlers = buildToolHandlers(client);
+		const result = await handlers.generate_captions({ videoPath: "/tmp/video.mp4" });
+		expect(result).toEqual({ success: true, count: 1 });
+		expect(client.call).toHaveBeenCalledWith(
+			"captions.generate",
+			expect.objectContaining({ arg: expect.objectContaining({ videoPath: "/tmp/video.mp4" }) }),
+		);
+		expect(client.call).toHaveBeenCalledWith("editor.setCaptions", {
+			cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }],
+		});
+	});
+
+	it("generate_captions does not call editor.setCaptions when transcription fails", async () => {
+		const client = fakeClient({
+			"captions.generate": { success: false, error: "model not found", message: "Failed to generate auto captions" },
+		});
+		const handlers = buildToolHandlers(client);
+		await expect(handlers.generate_captions({ videoPath: "/tmp/video.mp4" })).rejects.toThrow();
+		expect(client.call).not.toHaveBeenCalledWith("editor.setCaptions", expect.anything());
+	});
+
+	it("edit_caption forwards args directly to editor.editCaption", async () => {
+		const client = fakeClient({ "editor.editCaption": { success: true } });
+		const handlers = buildToolHandlers(client);
+		const result = await handlers.edit_caption({ action: "delete", id: "c1" });
+		expect(result).toEqual({ success: true });
+		expect(client.call).toHaveBeenCalledWith("editor.editCaption", { action: "delete", id: "c1" });
+	});
 });
