@@ -3197,6 +3197,109 @@ export default function VideoEditor() {
 						result = { id };
 						break;
 					}
+					case "setCaptions": {
+						const params = payload as { cues?: CaptionCue[] };
+						if (!Array.isArray(params.cues)) {
+							throw new Error("setCaptions requires a cues array");
+						}
+						setAutoCaptions(params.cues);
+						if (params.cues.length > 0) {
+							setAutoCaptionSettings((prev) => ({ ...prev, enabled: true }));
+						}
+						result = { success: true, count: params.cues.length };
+						break;
+					}
+					case "editCaption": {
+						const params = payload as {
+							action?: string;
+							id?: string;
+							text?: string;
+							startMs?: number;
+							endMs?: number;
+							atMs?: number;
+							mergeWithId?: string;
+						};
+						if (typeof params.id !== "string") {
+							throw new Error("editCaption requires an id");
+						}
+						switch (params.action) {
+							case "setText": {
+								if (typeof params.text !== "string") {
+									throw new Error("editCaption action 'setText' requires text");
+								}
+								const targetId = params.id;
+								const editText = params.text;
+								setAutoCaptions((captions) => {
+									const cue = captions.find((value) => value.id === targetId);
+									if (!cue) {
+										return captions;
+									}
+									const words = normalizeCaptionWords(cue);
+									if (words.length === 0) {
+										const normalized = normalizeCaptionEditText(editText);
+										return captions.map((value) =>
+											value.id === targetId ? { ...value, text: normalized } : value,
+										);
+									}
+									const target: CaptionEditTarget = {
+										id: cue.id,
+										startMs: cue.startMs,
+										endMs: cue.endMs,
+										text: cue.text,
+										words: words.map((word, index) => ({
+											cueId: cue.id,
+											cueWordIndex: index,
+											startMs: word.startMs,
+											endMs: word.endMs,
+											text: word.text,
+											leadingSpace: Boolean(word.leadingSpace),
+										})),
+									};
+									return updateCaptionCuesForEditedTarget(captions, target, editText);
+								});
+								break;
+							}
+							case "retime": {
+								if (typeof params.startMs !== "number" || typeof params.endMs !== "number") {
+									throw new Error(
+										"editCaption action 'retime' requires numeric startMs/endMs",
+									);
+								}
+								const span: CaptionRetimeSpan = {
+									startMs: params.startMs,
+									endMs: params.endMs,
+								};
+								setAutoCaptions((captions) => retimeCue(captions, params.id as string, span));
+								break;
+							}
+							case "split": {
+								if (typeof params.atMs !== "number") {
+									throw new Error("editCaption action 'split' requires numeric atMs");
+								}
+								setAutoCaptions((captions) =>
+									splitCue(captions, params.id as string, params.atMs as number),
+								);
+								break;
+							}
+							case "merge": {
+								if (typeof params.mergeWithId !== "string") {
+									throw new Error("editCaption action 'merge' requires mergeWithId");
+								}
+								setAutoCaptions((captions) =>
+									mergeCues(captions, params.id as string, params.mergeWithId as string),
+								);
+								break;
+							}
+							case "delete": {
+								setAutoCaptions((captions) => deleteCue(captions, params.id as string));
+								break;
+							}
+							default:
+								throw new Error(`Unknown editCaption action: ${params.action}`);
+						}
+						result = { success: true };
+						break;
+					}
 					default:
 						throw new Error(`Unknown automation editor request type: ${type}`);
 				}
