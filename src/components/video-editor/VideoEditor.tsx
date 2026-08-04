@@ -6069,7 +6069,7 @@ export default function VideoEditor() {
 	}
 
 	return (
-		<div className="flex flex-col h-screen bg-editor-bg text-foreground overflow-hidden selection:bg-[#2563EB]/30">
+		<div className="flex flex-col h-screen bg-editor-bg text-foreground overflow-hidden selection:bg-[#E5AF89]/30">
 			<div
 				className="relative flex h-11 flex-shrink-0 items-center justify-between bg-editor-header/88 px-5 backdrop-blur-md border-b border-foreground/10 z-50"
 				style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
@@ -6126,7 +6126,7 @@ export default function VideoEditor() {
 							className="flex max-w-[min(52vw,460px)] items-baseline gap-1 rounded-[7px] border border-foreground/10 bg-editor-panel/[0.88] px-2.5 py-1 shadow-[0_10px_28px_rgba(0,0,0,0.18)]"
 						>
 							{hasUnsavedChanges ? (
-								<span className="mt-[1px] size-2 shrink-0 rounded-full bg-[#2563EB]" />
+								<span className="mt-[1px] size-2 shrink-0 rounded-full bg-[#E5AF89]" />
 							) : null}
 							<input
 								ref={projectNameInputRef}
@@ -6162,7 +6162,7 @@ export default function VideoEditor() {
 							aria-label={t("editor.project.renameTitle", "Rename project")}
 						>
 							{hasUnsavedChanges ? (
-								<span className="mt-[1px] size-2 shrink-0 rounded-full bg-[#2563EB]" />
+								<span className="mt-[1px] size-2 shrink-0 rounded-full bg-[#E5AF89]" />
 							) : null}
 							<span className="truncate text-sm font-semibold tracking-tight text-foreground/90">
 								{projectDisplayName}
@@ -6233,7 +6233,7 @@ export default function VideoEditor() {
 										<Button
 											type="submit"
 											size="sm"
-											className="h-9 rounded-xl bg-[#2563EB] px-3 text-white hover:bg-[#1d4ed8]"
+											className="h-9 rounded-xl bg-[#E5AF89] px-3 text-white hover:bg-[#c4906c]"
 										>
 											{t("common.actions.save", "Save")}
 										</Button>
@@ -6259,7 +6259,7 @@ export default function VideoEditor() {
 														className={cn(
 															"flex items-center gap-2 rounded-xl border px-2 py-2 text-sm transition-colors",
 															isActive
-																? "border-[#2563EB]/20 bg-[#2563EB]/10 text-foreground"
+																? "border-[#E5AF89]/20 bg-[#E5AF89]/10 text-foreground"
 																: "border-foreground/8 bg-foreground/[0.03] text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground",
 														)}
 													>
@@ -6274,7 +6274,7 @@ export default function VideoEditor() {
 																{preset.name}
 															</span>
 															{isActive ? (
-																<Check className="h-3.5 w-3.5 shrink-0 text-[#2563EB]" />
+																<Check className="h-3.5 w-3.5 shrink-0 text-[#E5AF89]" />
 															) : null}
 														</button>
 														<button
@@ -6318,7 +6318,7 @@ export default function VideoEditor() {
 							<Button
 								type="button"
 								onClick={handleOpenExportDropdown}
-								className="inline-flex h-8 min-w-[112px] items-center justify-center gap-2 rounded-[5px] bg-[#2563EB] px-4.5 text-white transition-colors hover:bg-[#2563EB]/92"
+								className="inline-flex h-8 min-w-[112px] items-center justify-center gap-2 rounded-[5px] bg-[#E5AF89] px-4.5 text-white transition-colors hover:bg-[#E5AF89]/92"
 							>
 								<Download className="h-4 w-4" />
 								<span className="text-sm font-semibold tracking-tight">
@@ -6381,7 +6381,7 @@ export default function VideoEditor() {
 											<div className="indeterminate-progress h-full rounded-full bg-transparent" />
 										) : (
 											<div
-												className="h-full bg-[#2563EB] transition-all duration-300 ease-out"
+												className="h-full bg-[#E5AF89] transition-all duration-300 ease-out"
 												style={{
 													width: `${Math.min(isRenderingAudio ? (exportProgress?.audioProgress ?? 0) * 100 : (exportFinalizingProgress ?? exportProgress?.percentage ?? 8), 100)}%`,
 												}}
@@ -6432,7 +6432,7 @@ export default function VideoEditor() {
 											<Button
 												type="button"
 												onClick={handleRetrySaveExport}
-												className="h-8 flex-1 rounded-[5px] bg-[#2563EB] text-xs font-semibold text-white hover:bg-[#2563EB]/92"
+												className="h-8 flex-1 rounded-[5px] bg-[#E5AF89] text-xs font-semibold text-white hover:bg-[#E5AF89]/92"
 											>
 												{t("editor.actions.saveAgain", "Save Again")}
 											</Button>
@@ -6470,7 +6470,7 @@ export default function VideoEditor() {
 										<Button
 											type="button"
 											onClick={revealExportedFile}
-											className="h-8 flex-1 rounded-[5px] bg-[#2563EB] text-xs font-semibold text-white hover:bg-[#2563EB]/92"
+											className="h-8 flex-1 rounded-[5px] bg-[#E5AF89] text-xs font-semibold text-white hover:bg-[#E5AF89]/92"
 										>
 											{t("editor.actions.showInFolder", "Show In Folder")}
 										</Button>
@@ -6558,7 +6558,7 @@ export default function VideoEditor() {
 												className="relative z-10"
 												animate={{
 													color: isActive
-														? "#2563EB"
+														? "#E5AF89"
 														: "hsl(var(--foreground))",
 												}}
 												transition={{ duration: 0.14 }}
@@ -6581,7 +6581,7 @@ export default function VideoEditor() {
 											{isActive && (
 												<motion.span
 													layoutId="rail-active-dot"
-													className="block h-1.5 w-1.5 rounded-full bg-[#2563EB]"
+													className="block h-1.5 w-1.5 rounded-full bg-[#E5AF89]"
 													initial={{ opacity: 0, scale: 0.5 }}
 													animate={{ opacity: 1, scale: 1 }}
 													exit={{ opacity: 0, scale: 0.5 }}
@@ -6863,7 +6863,7 @@ export default function VideoEditor() {
 												>
 													<span>{getAspectRatioLabel(ratio)}</span>
 													{aspectRatio === ratio && (
-														<Check className="w-3 h-3 text-[#2563EB]" />
+														<Check className="w-3 h-3 text-[#E5AF89]" />
 													)}
 												</DropdownMenuItem>
 											))}
@@ -6881,7 +6881,7 @@ export default function VideoEditor() {
 											{t("settings.crop.title")}
 										</span>
 										{isCropped ? (
-											<span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" />
+											<span className="h-1.5 w-1.5 rounded-full bg-[#E5AF89]" />
 										) : null}
 									</Button>
 								</div>
@@ -6974,7 +6974,7 @@ export default function VideoEditor() {
 									onClick={() => timelineRef.current?.addZoom()}
 									variant="ghost"
 									size="icon"
-									className="h-7 w-7 rounded-full text-muted-foreground transition-all hover:bg-[#2563EB]/10 hover:text-[#2563EB]"
+									className="h-7 w-7 rounded-full text-muted-foreground transition-all hover:bg-[#E5AF89]/10 hover:text-[#E5AF89]"
 									title={t("timeline.zoom.addZoom")}
 								>
 									<ZoomIn className="w-4 h-4" />
@@ -6983,7 +6983,7 @@ export default function VideoEditor() {
 									onClick={() => timelineRef.current?.suggestZooms()}
 									variant="ghost"
 									size="icon"
-									className="h-7 w-7 rounded-full text-muted-foreground transition-all hover:bg-[#2563EB]/10 hover:text-[#2563EB]"
+									className="h-7 w-7 rounded-full text-muted-foreground transition-all hover:bg-[#E5AF89]/10 hover:text-[#E5AF89]"
 									title={t("timeline.zoom.suggestZooms")}
 								>
 									<WandSparkles className="w-4 h-4" />
@@ -7070,7 +7070,7 @@ export default function VideoEditor() {
 											}}
 										/>
 										<div
-											className="pointer-events-none absolute bottom-[18%] top-[18%] z-10 w-[2px] rounded-full bg-foreground/95 shadow-[0_0_10px_rgba(37,99,235,0.28)]"
+											className="pointer-events-none absolute bottom-[18%] top-[18%] z-10 w-[2px] rounded-full bg-foreground/95 shadow-[0_0_10px_rgba(229, 175, 137,0.28)]"
 											style={{ left: `calc(${previewVolume * 100}% - 8px)` }}
 										/>
 										<span className="pointer-events-none relative z-10 pl-2 text-[10px] font-medium text-muted-foreground">
@@ -7202,7 +7202,7 @@ export default function VideoEditor() {
 							<Button
 								onClick={handleCloseCropEditor}
 								size="lg"
-								className="bg-[#2563EB] text-white hover:bg-[#2563EB]/90"
+								className="bg-[#E5AF89] text-white hover:bg-[#E5AF89]/90"
 							>
 								{t("common.actions.done")}
 							</Button>

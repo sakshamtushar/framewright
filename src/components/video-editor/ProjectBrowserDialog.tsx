@@ -213,13 +213,13 @@ export default function ProjectBrowserDialog({
 													draggable={false}
 												/>
 											) : (
-												<div className="flex h-full w-full items-center justify-center bg-[linear-gradient(180deg,_rgba(37,99,235,0.22),_rgba(13,17,23,0.92))] text-[10px] font-medium text-white/60">
+												<div className="flex h-full w-full items-center justify-center bg-[linear-gradient(180deg,_rgba(229, 175, 137,0.22),_rgba(13,17,23,0.92))] text-[10px] font-medium text-white/60">
 													No preview yet
 												</div>
 											)}
 											{entry.isCurrent ? (
 												<div className="absolute right-1.5 top-1.5">
-													<span className="rounded-[5px] bg-[#2563EB] px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_8px_20px_rgba(37,99,235,0.28)]">
+													<span className="rounded-[5px] bg-[#E5AF89] px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_8px_20px_rgba(229, 175, 137,0.28)]">
 														Current
 													</span>
 												</div>
@@ -295,13 +295,13 @@ export default function ProjectBrowserDialog({
 													draggable={false}
 												/>
 											) : (
-												<div className="flex h-full w-full items-center justify-center bg-[linear-gradient(180deg,_rgba(37,99,235,0.22),_rgba(13,17,23,0.92))] text-[10px] font-medium text-white/60">
+												<div className="flex h-full w-full items-center justify-center bg-[linear-gradient(180deg,_rgba(229, 175, 137,0.22),_rgba(13,17,23,0.92))] text-[10px] font-medium text-white/60">
 													No preview yet
 												</div>
 											)}
 											{entry.isCurrent ? (
 												<div className="absolute right-1.5 top-1.5">
-													<span className="rounded-[5px] bg-[#2563EB] px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_8px_20px_rgba(37,99,235,0.28)]">
+													<span className="rounded-[5px] bg-[#E5AF89] px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_8px_20px_rgba(229, 175, 137,0.28)]">
 														Current
 													</span>
 												</div>

@@ -83,7 +83,7 @@ export function FeedbackDialog() {
 			<DialogContent className="max-w-lg bg-editor-dialog border-foreground/10 [&>button]:text-muted-foreground [&>button:hover]:text-foreground">
 				<DialogHeader>
 					<DialogTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
-						<MessageSquareMore className="h-5 w-5 text-[#2563EB]" /> {t("feedback.title", "Feedback & contact")}
+						<MessageSquareMore className="h-5 w-5 text-[#E5AF89]" /> {t("feedback.title", "Feedback & contact")}
 					</DialogTitle>
 					<DialogDescription className="text-muted-foreground">
 						{t("feedback.description", "Reach out directly or open an issue if something is broken or missing.")}
@@ -177,7 +177,7 @@ export function KeyboardShortcutsDialog({
 			<DialogContent className="max-w-lg bg-editor-dialog border-foreground/10 [&>button]:text-muted-foreground [&>button:hover]:text-foreground">
 				<DialogHeader>
 					<DialogTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
-						<Keyboard className="h-5 w-5 text-[#2563EB]" /> {t("keyboardShortcuts.title")}
+						<Keyboard className="h-5 w-5 text-[#E5AF89]" /> {t("keyboardShortcuts.title")}
 					</DialogTitle>
 					<DialogDescription className="text-muted-foreground">
 						{t("keyboardShortcuts.description", "Quick reference for the timeline and editor controls.")}
@@ -188,7 +188,7 @@ export function KeyboardShortcutsDialog({
 						{SHORTCUT_ACTIONS.map((action) => (
 							<div key={action} className="flex items-center justify-between gap-3 rounded-lg border border-foreground/5 bg-foreground/5 px-3 py-2.5">
 								<span className="text-muted-foreground">{SHORTCUT_LABELS[action]}</span>
-								<kbd className="rounded border border-foreground/10 bg-foreground/10 px-2 py-1 font-mono text-[#2563EB]">
+								<kbd className="rounded border border-foreground/10 bg-foreground/10 px-2 py-1 font-mono text-[#E5AF89]">
 									{formatBinding(shortcuts[action], isMac)}
 								</kbd>
 							</div>
@@ -196,19 +196,19 @@ export function KeyboardShortcutsDialog({
 						<div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-3">
 							<div className="rounded-lg border border-foreground/5 bg-foreground/5 px-3 py-2.5">
 								<p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/70">{t("keyboardShortcuts.panTimeline")}</p>
-								<kbd className="mt-2 inline-flex rounded border border-foreground/10 bg-foreground/10 px-2 py-1 font-mono text-[#2563EB]">
+								<kbd className="mt-2 inline-flex rounded border border-foreground/10 bg-foreground/10 px-2 py-1 font-mono text-[#E5AF89]">
 									{scrollLabels.pan}
 								</kbd>
 							</div>
 							<div className="rounded-lg border border-foreground/5 bg-foreground/5 px-3 py-2.5">
 								<p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/70">{t("keyboardShortcuts.zoomTimeline")}</p>
-								<kbd className="mt-2 inline-flex rounded border border-foreground/10 bg-foreground/10 px-2 py-1 font-mono text-[#2563EB]">
+								<kbd className="mt-2 inline-flex rounded border border-foreground/10 bg-foreground/10 px-2 py-1 font-mono text-[#E5AF89]">
 									{scrollLabels.zoom}
 								</kbd>
 							</div>
 							<div className="rounded-lg border border-foreground/5 bg-foreground/5 px-3 py-2.5">
 								<p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/70">{t("keyboardShortcuts.cycleAnnotations")}</p>
-								<kbd className="mt-2 inline-flex rounded border border-foreground/10 bg-foreground/10 px-2 py-1 font-mono text-[#2563EB]">
+								<kbd className="mt-2 inline-flex rounded border border-foreground/10 bg-foreground/10 px-2 py-1 font-mono text-[#E5AF89]">
 									{t("keyboardShortcuts.tab")}
 								</kbd>
 							</div>

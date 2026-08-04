@@ -75,10 +75,10 @@ export default function TimelineToolbar({
 	return (
 		<div className="flex items-center gap-2 px-4 py-2 border-b border-foreground/10 bg-editor-panel">
 			<div className="flex items-center gap-1">
-				<Button onClick={onAddZoom} variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-[#2563EB] hover:bg-[#2563EB]/10 transition-all" title={addZoomLabel} aria-label={addZoomLabel}>
+				<Button onClick={onAddZoom} variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-[#E5AF89] hover:bg-[#E5AF89]/10 transition-all" title={addZoomLabel} aria-label={addZoomLabel}>
 					<ZoomIn className="w-4 h-4" />
 				</Button>
-				<Button onClick={onSuggestZooms} variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-[#2563EB] hover:bg-[#2563EB]/10 transition-all" title={suggestZoomsLabel} aria-label={suggestZoomsLabel}>
+				<Button onClick={onSuggestZooms} variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-[#E5AF89] hover:bg-[#E5AF89]/10 transition-all" title={suggestZoomsLabel} aria-label={suggestZoomsLabel}>
 					<WandSparkles className="w-4 h-4" />
 				</Button>
 				<Button onClick={onAddAnnotation} variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-[#B4A046] hover:bg-[#B4A046]/10 transition-all" title={addAnnotationLabel} aria-label={addAnnotationLabel}>
@@ -103,17 +103,17 @@ export default function TimelineToolbar({
 						{ASPECT_RATIOS.map((ratio) => (
 							<DropdownMenuItem key={ratio} onClick={() => onAspectRatioChange?.(ratio)} className="text-muted-foreground hover:text-foreground hover:bg-foreground/10 cursor-pointer flex items-center justify-between gap-3">
 								<span>{getAspectRatioLabel(ratio)}</span>
-								{aspectRatio === ratio && <Check className="w-3 h-3 text-[#2563EB]" />}
+								{aspectRatio === ratio && <Check className="w-3 h-3 text-[#E5AF89]" />}
 							</DropdownMenuItem>
 						))}
 						<div className="mx-1 my-1 h-px bg-foreground/10" />
 						<div className="px-2 py-1.5 flex items-center gap-2 text-muted-foreground">
 							<span className="text-sm">Custom</span>
-							<input type="text" inputMode="numeric" value={customAspectWidth} onChange={(event) => onCustomAspectWidthChange(event.target.value.replace(/\D/g, ""))} onKeyDown={onCustomAspectRatioKeyDown} className="w-12 h-7 rounded border border-foreground/10 bg-foreground/5 px-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[#2563EB]" aria-label="Custom aspect width" />
+							<input type="text" inputMode="numeric" value={customAspectWidth} onChange={(event) => onCustomAspectWidthChange(event.target.value.replace(/\D/g, ""))} onKeyDown={onCustomAspectRatioKeyDown} className="w-12 h-7 rounded border border-foreground/10 bg-foreground/5 px-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[#E5AF89]" aria-label="Custom aspect width" />
 							<span className="text-muted-foreground/70">:</span>
-							<input type="text" inputMode="numeric" value={customAspectHeight} onChange={(event) => onCustomAspectHeightChange(event.target.value.replace(/\D/g, ""))} onKeyDown={onCustomAspectRatioKeyDown} className="w-12 h-7 rounded border border-foreground/10 bg-foreground/5 px-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[#2563EB]" aria-label="Custom aspect height" />
+							<input type="text" inputMode="numeric" value={customAspectHeight} onChange={(event) => onCustomAspectHeightChange(event.target.value.replace(/\D/g, ""))} onKeyDown={onCustomAspectRatioKeyDown} className="w-12 h-7 rounded border border-foreground/10 bg-foreground/5 px-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[#E5AF89]" aria-label="Custom aspect height" />
 							<Button variant="ghost" size="sm" onClick={onApplyCustomAspectRatio} className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-foreground/10">Set</Button>
-							{isCustomAspectRatio(aspectRatio) && <Check className="w-3 h-3 text-[#2563EB] ml-auto" />}
+							{isCustomAspectRatio(aspectRatio) && <Check className="w-3 h-3 text-[#E5AF89] ml-auto" />}
 						</div>
 					</DropdownMenuContent>
 				</DropdownMenu>
@@ -127,21 +127,21 @@ export default function TimelineToolbar({
 				>
 					<Crop className="w-3.5 h-3.5" />
 					<span className="font-medium">{cropLabel}</span>
-					{isCropped ? <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" /> : null}
+					{isCropped ? <span className="h-1.5 w-1.5 rounded-full bg-[#E5AF89]" /> : null}
 				</Button>
 			</div>
 			<div className="flex-1" />
 			<div className="flex items-center gap-4 text-[10px] text-muted-foreground/70 font-medium">
 				<span className="flex items-center gap-1.5">
-					<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#2563EB] font-sans">Side Scroll</kbd>
+					<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#E5AF89] font-sans">Side Scroll</kbd>
 					<span>Pan</span>
 				</span>
 				<span className="flex items-center gap-1.5">
-					<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#2563EB] font-sans">{scrollLabels.pan}</kbd>
+					<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#E5AF89] font-sans">{scrollLabels.pan}</kbd>
 					<span>Pan</span>
 				</span>
 				<span className="flex items-center gap-1.5">
-					<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#2563EB] font-sans">{scrollLabels.zoom}</kbd>
+					<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#E5AF89] font-sans">{scrollLabels.zoom}</kbd>
 					<span>Zoom</span>
 				</span>
 			</div>

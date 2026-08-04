@@ -49,7 +49,7 @@ export const SliderControl = memo(function SliderControl({
 	const dividerClass =
 		accentColor === "purple"
 			? "bg-foreground/95 shadow-[0_0_10px_rgba(139,92,246,0.28)]"
-			: "bg-foreground/95 shadow-[0_0_10px_rgba(37,99,235,0.28)]";
+			: "bg-foreground/95 shadow-[0_0_10px_rgba(229, 175, 137,0.28)]";
 
 	// Sync initial and prop-driven changes to CSS variable
 	useEffect(() => {
@@ -163,7 +163,7 @@ export const SliderControl = memo(function SliderControl({
 					onChange(clamp(quantizeToStep(value + step, min, step), min, max));
 				}
 			}}
-			className="relative flex h-10 w-full select-none items-center overflow-hidden rounded-xl bg-editor-bg/80 px-1.5 outline-none focus-visible:ring-1 focus-visible:ring-[#2563EB]/40"
+			className="relative flex h-10 w-full select-none items-center overflow-hidden rounded-xl bg-editor-bg/80 px-1.5 outline-none focus-visible:ring-1 focus-visible:ring-[#E5AF89]/40"
 			style={
 				{
 					"--slider-pct": String(pct / 100),

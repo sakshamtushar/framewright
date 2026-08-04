@@ -1,40 +1,40 @@
 .launch-theme {
-	/* Ultra-Refined Light Mode (Premium OS style) */
-	--launch-surface: #ffffff;
-	--launch-panel: #f8fafc;
-	--launch-border: rgba(0, 0, 0, 0.08);
-	--launch-border-strong: rgba(0, 0, 0, 0.16);
-	--launch-text: #020617; /* Deepest Navy/Black */
-	--launch-text-muted: #475569; /* Slate 600 */
-	--launch-label: #64748b; /* Slate 500 - increased contrast */
-	--launch-hover: rgba(0, 0, 0, 0.045);
-	--launch-selected: rgba(37, 99, 235, 0.12); /* Blue 600 at 12% */
-	--launch-accent: #2563eb; /* Blue 600 */
-	--launch-accent-soft: #f1f5f9; /* Slate 100 */
+	/* Framewright "forest sunset" light mode */
+	--launch-surface: #fdfaf6;
+	--launch-panel: #f6efe4;
+	--launch-border: rgba(55, 59, 60, 0.1);
+	--launch-border-strong: rgba(55, 59, 60, 0.18);
+	--launch-text: #2a2f30; /* darker than palette's 373B3C for text contrast */
+	--launch-text-muted: #52605c; /* derived from 687D78 */
+	--launch-label: #687d78; /* palette mid sage */
+	--launch-hover: rgba(55, 59, 60, 0.045);
+	--launch-selected: rgba(229, 175, 137, 0.18); /* E5AF89 at 18% */
+	--launch-accent: #e5af89; /* palette peach */
+	--launch-accent-soft: #f6e6d8; /* light peach tint */
 	--launch-popover-blur: 40px;
 	--launch-popover-saturate: 200%;
-	--launch-bar-bg: rgba(255, 255, 255, 0.98);
-	--launch-bar-border: rgba(0, 0, 0, 0.08);
-	--launch-bar-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+	--launch-bar-bg: rgba(253, 250, 246, 0.98);
+	--launch-bar-border: rgba(55, 59, 60, 0.08);
+	--launch-bar-shadow: 0 12px 40px rgba(55, 59, 60, 0.12), 0 4px 12px rgba(55, 59, 60, 0.06);
 
 	color: var(--launch-text);
 }
 
 .dark .launch-theme,
 .launch-theme.dark {
-	/* Dark Mode values */
-	--launch-surface: rgba(18, 18, 24, 0.97);
-	--launch-panel: rgba(18, 18, 24, 0.82);
-	--launch-border: rgba(255, 255, 255, 0.07);
-	--launch-border-strong: rgba(255, 255, 255, 0.12);
-	--launch-text: #f3f6ff;
-	--launch-text-muted: #aab3c7;
-	--launch-label: #8f99b1;
-	--launch-hover: rgba(255, 255, 255, 0.1);
-	--launch-selected: rgba(92, 153, 255, 0.22);
-	--launch-accent: #3d8bff;
-	--launch-accent-soft: #dbeafe;
-	--launch-bar-bg: rgba(18, 18, 24, 0.97);
-	--launch-bar-border: rgba(255, 255, 255, 0.07);
-	--launch-bar-shadow: 0 10px 30px rgba(0, 0, 0, 0.24), 0 2px 10px rgba(0, 0, 0, 0.12);
+	/* Framewright "forest sunset" dark mode */
+	--launch-surface: rgba(55, 59, 60, 0.97); /* 373B3C */
+	--launch-panel: rgba(62, 72, 73, 0.9); /* 3E4849 */
+	--launch-border: rgba(227, 206, 175, 0.08); /* E3CEAF tint */
+	--launch-border-strong: rgba(227, 206, 175, 0.14);
+	--launch-text: #e3ceaf; /* palette cream */
+	--launch-text-muted: #b6c4bd; /* lightened 87998D */
+	--launch-label: #87998d; /* palette light sage */
+	--launch-hover: rgba(227, 206, 175, 0.1);
+	--launch-selected: rgba(229, 175, 137, 0.22);
+	--launch-accent: #e5af89; /* palette peach */
+	--launch-accent-soft: #4a3527; /* dark peach-tinted surface */
+	--launch-bar-bg: rgba(55, 59, 60, 0.97);
+	--launch-bar-border: rgba(227, 206, 175, 0.08);
+	--launch-bar-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 2px 10px rgba(0, 0, 0, 0.16);
 }
