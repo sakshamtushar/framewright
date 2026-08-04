@@ -1,27 +1,31 @@
 语言: [EN](README.md) | 简中
 
 <p align="center">
-  <img width="220" alt="Recordly logo" src="https://github.com/user-attachments/assets/082bb4b0-5fc5-4e9f-abda-55611fd6aded" />
+  <img width="220" alt="Framewright logo" src="branding/framewright/logo-mark-draft-v1.png" />
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/macOS%20%7C%20Windows%20%7C%20Linux-111827?style=for-the-badge" alt="macOS Windows Linux" />
-  <img src="https://img.shields.io/badge/open%20source-AGPL3.0-2563eb?style=for-the-badge" alt="AGPL 3.0 license" />
+  <img src="https://img.shields.io/badge/open%20source-AGPL3.0-e5af89?style=for-the-badge" alt="AGPL 3.0 license" />
 </p>
 
 ### 无需额外剪辑，也能做出精致的屏幕录制。
-[Recordly](https://www.recordly.dev) 是一款**开源屏幕录制器**和编辑器，适合制作**操作讲解、演示、产品视频**等内容。  
-**欢迎提交 PR。** [赞助](https://ko-fi.com/webadderall/goal?g=0)
+[Framewright](https://www.framewright.dev) 是一款**开源屏幕录制器**和编辑器，适合制作**操作讲解、演示、产品视频**等内容。  
+**欢迎提交 PR。**
 
 https://github.com/user-attachments/assets/9b66c71d-ac97-49ff-a0c9-63ac26edf2e4
 
 ---
 
-## Recordly 是什么？
+> Framewright 是 [Recordly](https://github.com/webadderallorg/Recordly) 的分叉项目，在相同的 AGPLv3 条款下独立重新命名并维护。完整的溯源关系见 [NOTICE.md](NOTICE.md)（英文）。
 
-Recordly 是一款桌面应用，用于录制并编辑屏幕内容，内置面向演示视频的动态呈现工具。你不需要再把原始素材交给动效设计师去补缩放、光标润色或样式化背景，Recordly 可以在一个地方免费完成整套流程。
+---
 
-Recordly 支持：
+## Framewright 是什么？
+
+Framewright 是一款桌面应用，用于录制并编辑屏幕内容，内置面向演示视频的动态呈现工具。你不需要再把原始素材交给动效设计师去补缩放、光标润色或样式化背景，Framewright 可以在一个地方免费完成整套流程。
+
+Framewright 支持：
 
 - **macOS** 14.0+
 - **Windows** 10 Build 19041+
@@ -38,21 +42,21 @@ Recordly 支持：
 # 核心功能
 
 ## 自动缩放、光标润色与样式化画面
-Recordly 可以根据操作自动强调重点区域，平滑光标运动，添加动态效果，并将最终画面放进带有壁纸、纯色、渐变、模糊、留白和阴影的样式化边框中。
+Framewright 可以根据操作自动强调重点区域，平滑光标运动，添加动态效果，并将最终画面放进带有壁纸、纯色、渐变、模糊、留白和阴影的样式化边框中。
 
 <p>
-  <img src="./docs/media/feature1.gif" width="450" alt="Recordly cursor and zoom demo video">
+  <img src="./docs/media/feature1.gif" width="450" alt="Framewright cursor and zoom demo video">
 </p>
 
 ## 动态摄像头气泡叠加
 你可以把摄像头素材作为气泡叠加层加入画面，使用预设位置或自定义坐标摆放，支持镜像、阴影和圆角调节，也可以让它跟随缩放变化，保证动态镜头里整体视觉更协调。
 
 <p>
-  <img src="./docs/media/feature2.gif" width="450" alt="Recordly webcam overlay demo video">
+  <img src="./docs/media/feature2.gif" width="450" alt="Framewright webcam overlay demo video">
 </p>
 
 ## 为演示设计的时间线编辑
-使用拖拽式时间线工具处理缩放、裁剪、变速区域、注释、额外音频区域以及裁切感知编辑，并将工作保存为 `.recordly` 项目文件，之后随时回来继续编辑。
+使用拖拽式时间线工具处理缩放、裁剪、变速区域、注释、额外音频区域以及裁切感知编辑，并将工作保存为 `.framewright` 项目文件（原 `.recordly` 文件依然可以打开），之后随时回来继续编辑。
 
 <p>
   <img width="450" alt="timeline editor" src="https://github.com/user-attachments/assets/3692bd8f-7b8d-4a93-b696-d17c828487ea" />
@@ -60,9 +64,9 @@ Recordly 可以根据操作自动强调重点区域，平滑光标运动，添�
 
 ## 扩展与市场
 
-Recordly 拥有一个社区驱动的扩展系统。任何人都可以构建和发布扩展来为 Recordly 添加新功能，例如光标点击音效、设备边框、浏览器模拟外壳、壁纸、渲染钩子、设置面板等等。
+Framewright 拥有一个社区驱动的扩展系统。任何人都可以构建和发布扩展来为 Framewright 添加新功能，例如光标点击音效、设备边框、浏览器模拟外壳、壁纸、渲染钩子、设置面板等等。
 
-浏览并安装社区扩展：[Recordly 扩展市场](https://marketplace.recordly.dev/extensions)。
+浏览并安装社区扩展：[Framewright 扩展市场](https://marketplace.framewright.dev/extensions)。
 
 ---
 
@@ -74,7 +78,7 @@ Recordly 拥有一个社区驱动的扩展系统。任何人都可以构建和�
 - 录制完成后直接进入编辑器
 - 录制麦克风音频和系统音频
 - 在支持的平台上使用原生捕获后端
-- 从保存的 `.recordly` 项目文件继续编辑
+- 从保存的 `.framewright` 项目文件继续编辑
 - 可在应用中打开已有录像或已有项目文件
 
 ### 时间线与编辑
@@ -148,16 +152,19 @@ Recordly 拥有一个社区驱动的扩展系统。任何人都可以构建和�
 
 # 截图
 
+> [!NOTE]
+> 以下截图沿用自原始 Recordly 项目，仍显示其蓝色主题——Framewright 的新截图正在准备中。
+
 <p align="center">
-  <img src="https://i.postimg.cc/8CrQtGJf/Screenshot-2026-04-30-at-5-11-52-pm.png" width="700" alt="Recordly recording interface screenshot">
+  <img src="https://i.postimg.cc/8CrQtGJf/Screenshot-2026-04-30-at-5-11-52-pm.png" width="700" alt="Framewright recording interface screenshot">
 </p>
 
 <p align="center">
-  <img src="https://i.postimg.cc/pLSMfrTM/Screenshot-2026-04-30-at-5-11-45-pm.png" width="700" alt="Recordly editor screenshot">
+  <img src="https://i.postimg.cc/pLSMfrTM/Screenshot-2026-04-30-at-5-11-45-pm.png" width="700" alt="Framewright editor screenshot">
 </p>
 
 <p align="center">
-  <img src="https://i.postimg.cc/Zn9VY6bg/Screenshot-2026-03-18-at-6-32-59-pm.png" width="700" alt="Recordly timeline screenshot">
+  <img src="https://i.postimg.cc/Zn9VY6bg/Screenshot-2026-03-18-at-6-32-59-pm.png" width="700" alt="Framewright timeline screenshot">
 </p>
 
 ---
@@ -168,19 +175,13 @@ Recordly 拥有一个社区驱动的扩展系统。任何人都可以构建和�
 
 预构建发布版本请见：
 
-https://github.com/webadderallorg/Recordly/releases
+https://github.com/sakshamtushar/framewright/releases
 
 ---
 
-## Arch Linux / Manjaro（yay）
+## Arch Linux / Manjaro
 
-可通过 AUR 安装（[recordly-bin](https://aur.archlinux.org/packages/recordly-bin)）：
-
-```bash
-yay -S recordly-bin
-```
-
-PKGBUILD、桌面入口、发布同步，以及可选的**本地源码打包**都维护在 **[recordly-aur](https://github.com/firtoz/recordly-aur)** 中，因此这个仓库本身不需要承担 Arch 发布维护工作。关于维护者联系方式和软件包更新方式，请查看该仓库或 AUR 软件包页面。
+Framewright 尚未设置 Arch 打包（AUR）——原始 Recordly 项目的 AUR 包（`recordly-bin`）维护在另一个仓库，不会跟踪本分叉项目。请暂时使用下方的[从源码构建](#从源码构建)，或者提交 issue 帮助建立 Framewright 的 AUR 包。
 
 ---
 
@@ -201,8 +202,8 @@ sudo apt install build-essential cmake libx11-dev libxtst-dev libxrandr-dev libx
 ### 步骤
 
 ```bash
-git clone https://github.com/webadderallorg/Recordly.git recordly
-cd recordly
+git clone https://github.com/sakshamtushar/framewright.git
+cd framewright
 npm install
 npm run dev
 ```
@@ -228,7 +229,7 @@ npm run build
 可以用以下命令移除隔离标记：
 
 ```bash
-xattr -rd com.apple.quarantine /Applications/Recordly.app
+xattr -rd com.apple.quarantine /Applications/Framewright.app
 ```
 
 ---
@@ -250,7 +251,7 @@ xattr -rd com.apple.quarantine /Applications/Recordly.app
 
 ## 录制
 
-1. 启动 Recordly。
+1. 启动 Framewright。
 2. 选择屏幕或窗口。
 3. 选择麦克风和系统音频选项。
 4. 开始录制。
@@ -267,7 +268,7 @@ xattr -rd com.apple.quarantine /Applications/Recordly.app
 - 添加额外音频区域
 - 裁切画面并选择宽高比
 
-你可以随时将工作保存为 `.recordly` 项目。
+你可以随时将工作保存为 `.framewright` 项目。
 
 ## 导出
 
@@ -284,7 +285,7 @@ xattr -rd com.apple.quarantine /Applications/Recordly.app
 
 ### 光标捕获
 
-Recordly 会在录制画面上渲染一个经过美化的光标叠加层，但真实系统光标是否能被隐藏仍取决于平台能力。
+Framewright 会在录制画面上渲染一个经过美化的光标叠加层，但真实系统光标是否能被隐藏仍取决于平台能力。
 
 **macOS**
 - ScreenCaptureKit 可以较干净地排除真实光标。
@@ -314,7 +315,7 @@ Recordly 会在录制画面上渲染一个经过美化的光标叠加层，但�
 
 # 工作原理
 
-Recordly 将平台相关的捕获层与基于渲染器的编辑、导出流程结合在一起。
+Framewright 将平台相关的捕获层与基于渲染器的编辑、导出流程结合在一起。
 
 **捕获**
 - Electron 负责录制流程和应用级控制
@@ -332,7 +333,13 @@ Recordly 将平台相关的捕获层与基于渲染器的编辑、导出流程�
 - 预览使用的同一套场景逻辑会被用于导出 MP4 或 GIF
 
 **项目**
-- `.recordly` 文件会保存源媒体路径和编辑器状态，方便后续继续编辑
+- `.framewright` 文件会保存源媒体路径和编辑器状态，方便后续继续编辑；旧版 `.recordly` 文件依然可以正常打开
+
+---
+
+# AI / MCP 控制
+
+Framewright 提供一个可选的 [MCP](https://modelcontextprotocol.io) 服务器（`mcp-server/`），让 Claude 这样的 AI 工具可以端到端控制录制、编辑器状态和字幕生成。详见 [`mcp-server/README.md`](mcp-server/README.md)（英文）中的工具目录、架构和安全模型说明。该功能完全是可选启用的，普通手动启动不受影响。
 
 ---
 
@@ -358,33 +365,15 @@ Recordly 将平台相关的捕获层与基于渲染器的编辑、导出流程�
 
 问题反馈和功能建议：
 
-https://github.com/webadderallorg/Recordly/issues
+https://github.com/sakshamtushar/framewright/issues
 
 欢迎提交 Pull Request。
 
 ---
 
-# 支持者名单
-
-[![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/webadderall)
-
-- Tadees
-- buildwithfur
-- Tobias
-- Anonymous Supporter
-- Tandava Appadoo
-- Digitalfastmind
-- Roberto Marcelino
-- Rajan RK
-- Francesco
-- Erwan
-- Anonymous supporter
-
----
-
 # 许可证
 
-Recordly 基于 **AGPL 3.0** 发布。
+Framewright 基于 **AGPL 3.0** 发布。详见 [LICENSE.md](LICENSE.md) 与 [NOTICE.md](NOTICE.md)（英文）。
 
 ---
 
@@ -392,9 +381,11 @@ Recordly 基于 **AGPL 3.0** 发布。
 
 ## 鸣谢
 
-Recordly 最初是从 [OpenScreen](https://github.com/siddharthvaddem/openscreen) 分叉而来，之后已逐步演变为一个不同的项目。
+Framewright 是 [Recordly](https://github.com/webadderallorg/Recordly)（由 [@webadderall](https://x.com/webadderall) 创建）的分叉项目，在 AGPLv3 的对等开源条款下独立重新命名并维护。Recordly 本身最初是从 [OpenScreen](https://github.com/siddharthvaddem/openscreen) 分叉而来，其许多核心功能（例如缩放动画）都可以追溯到这一脉络。完整的溯源关系见 [NOTICE.md](NOTICE.md)（英文）。
 
-创建者  
-[@webadderall](https://x.com/webadderall)
+Recordly 原有的支持者名单见 [Recordly 自己的 README](https://github.com/webadderallorg/Recordly#hall-of-supporters)——Framewright 是一个独立维护的分叉项目，不会将他们的支持视为对 Framewright 的支持。
 
 ---
+
+> [!NOTE]
+> 本文档为术语层面的机器辅助更新（产品名称、链接、文件后缀已替换为 Framewright），尚未经过母语者的完整校对，欢迎提交 PR 改进措辞。

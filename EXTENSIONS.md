@@ -1,12 +1,15 @@
-# Recordly Extension API
+# Framewright Extension API
 
-Go to https://www.marketplace.recordly.dev/extensions for full, regularly updated documentation
+Go to https://www.marketplace.framewright.dev/extensions for full, regularly updated documentation
 
-Recordly extensions run in the editor renderer and use a permission-gated host API. They can draw into the render pipeline, react to playback and export events, register cursor effects, add settings panels, and contribute packaged assets such as frames, wallpapers, and cursor styles.
+> [!NOTE]
+> Framewright inherited its extension system from [Recordly](https://github.com/webadderallorg/Recordly) and hasn't yet renamed the manifest filename (`recordly-extension.json`) or the `RecordlyExtensionAPI` TypeScript type — both are still literally named that in the current code, and this doc describes the current code accurately rather than the eventual renamed state. Renaming the manifest filename is a breaking change for third-party extensions and needs its own compat plan (similar to how `.recordly` project files stayed readable after the `.framewright` extension rename) before it happens.
+
+Framewright extensions run in the editor renderer and use a permission-gated host API. They can draw into the render pipeline, react to playback and export events, register cursor effects, add settings panels, and contribute packaged assets such as frames, wallpapers, and cursor styles.
 
 ## Quick Start
 
-For local user-installed extensions, use `Extensions -> Open Directory` in the app. Recordly stores them in the app `userData/extensions` directory. This repo also includes installable example bundles under `extension-examples/`.
+For local user-installed extensions, use `Extensions -> Open Directory` in the app. Framewright stores them in the app `userData/extensions` directory. This repo also includes installable example bundles under `extension-examples/`.
 
 ### Minimum Extension
 
@@ -54,7 +57,7 @@ export function activate(api: RecordlyExtensionAPI) {
 export function deactivate() {}
 ```
 
-Recordly loads the `main` entry from the manifest, which must be a `.js` file. If you author in TypeScript, compile or bundle to JavaScript before packaging. A `tsconfig.json` with `"module": "ESNext"` and `"target": "ESNext"` works well since extensions run in a Chromium renderer.
+Framewright loads the `main` entry from the manifest, which must be a `.js` file. If you author in TypeScript, compile or bundle to JavaScript before packaging. A `tsconfig.json` with `"module": "ESNext"` and `"target": "ESNext"` works well since extensions run in a Chromium renderer.
 
 ### Manifest Screenshots
 
@@ -85,14 +88,14 @@ Paths are relative to the extension root. The marketplace displays screenshots i
 | `author` | `string` | No | Author or organisation |
 | `homepage` | `string` | No | HTTPS homepage or repository URL |
 | `license` | `string` | No | SPDX license identifier |
-| `engine` | `string` | No | Minimum supported Recordly version |
+| `engine` | `string` | No | Minimum supported Framewright version |
 | `icon` | `string` | No | Relative path to a PNG icon |
 | `screenshots` | `string[]` | No | Relative paths to preview images shown in the marketplace |
 | `main` | `string` | Yes | Relative entry point JS file |
 | `permissions` | `string[]` | Yes | Required capabilities |
 | `contributes` | `object` | No | Metadata for packaged frames, cursor styles, sounds, wallpapers, and webcam frames |
 
-`contributes` is metadata only today. Recordly does not auto-register runtime behavior from the manifest. Use `activate()` to call APIs such as `registerFrame()`, `registerWallpaper()`, `registerCursorStyle()`, `registerSettingsPanel()`, and `playSound()`.
+`contributes` is metadata only today. Framewright does not auto-register runtime behavior from the manifest. Use `activate()` to call APIs such as `registerFrame()`, `registerWallpaper()`, `registerCursorStyle()`, `registerSettingsPanel()`, and `playSound()`.
 
 ## Permissions
 
@@ -123,7 +126,7 @@ Render hooks draw into `hookCtx.ctx`, a `CanvasRenderingContext2D`, at specific 
 ### Inside vs Outside the Scene Transform
 
 - `post-video`, `post-zoom`, and `post-cursor` already follow zoom and motion in preview and export.
-- `post-webcam`, `post-annotations`, and `final` run after Recordly restores the canvas transform. Use `sceneTransform` manually if you want those overlays to move with the scene.
+- `post-webcam`, `post-annotations`, and `final` run after Framewright restores the canvas transform. Use `sceneTransform` manually if you want those overlays to move with the scene.
 
 ### RenderHookContext
 
@@ -230,12 +233,12 @@ api.getActiveFrame();
 api.isExtensionActive(extensionId);
 api.getPlaybackState();
 api.getCanvasDimensions();
-api.drawIcon(ctx, "Sparkle", 100, 100, 20, "#2563EB", "regular");
+api.drawIcon(ctx, "Sparkle", 100, 100, 20, "#E5AF89", "regular");
 ```
 
 ### Drawing Icons
 
-Extensions can draw icons from Recordly's bundled Phosphor icon set directly on a canvas context:
+Extensions can draw icons from Framewright's bundled Phosphor icon set directly on a canvas context:
 
 ```js
 api.drawIcon(
@@ -269,7 +272,7 @@ api.registerSettingsPanel({
       defaultValue: "ripple",
       options: [{ label: "Ripple", value: "ripple" }, { label: "Pulse", value: "pulse" }],
     },
-    { id: "color", label: "Color", type: "color", defaultValue: "#2563EB" },
+    { id: "color", label: "Color", type: "color", defaultValue: "#E5AF89" },
   ],
 });
 ```
@@ -300,7 +303,7 @@ Use `parentSection` to nest your panel inside an existing area such as `cursor` 
 
 ## Lifecycle
 
-1. Discovery: Recordly scans built-in extensions and the user extensions directory.
+1. Discovery: Framewright scans built-in extensions and the user extensions directory.
 2. Activation: `activate(api)` runs and you register hooks, effects, panels, and assets.
 3. Runtime: Registered callbacks execute in preview and export according to their phase.
 4. Deactivation: `deactivate()` runs and all registrations are automatically disposed.

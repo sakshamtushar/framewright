@@ -17,7 +17,7 @@ npm run build
 npm start   # runs dist/index.js as an MCP stdio server
 ```
 
-Point an MCP client (Claude Code, Claude Desktop, or the [MCP inspector](https://github.com/modelcontextprotocol/inspector)) at `node <path-to-this-repo>/mcp-server/dist/index.js`. On first tool call it will either attach to a Recordly instance you already have running, or launch one itself.
+Point an MCP client (Claude Code, Claude Desktop, or the [MCP inspector](https://github.com/modelcontextprotocol/inspector)) at `node <path-to-this-repo>/mcp-server/dist/index.js`. On first tool call it will either attach to a Framewright instance you already have running, or launch one itself.
 
 ## Live verification
 

@@ -8,12 +8,13 @@ Version 3, 19 November 2007
   to power a website or service (SaaS)**, you MUST make your **entire 
   source code** (including all edits) p**ublicly available** under this 
   same AGPLv3 license.
-- You CANNOT use the "Recordly" name or branding for your own project.
-- If you use Recordly's code or create code derived from Recordly you must attribute Recordly in the user-facing UI and the repo.
+- You CANNOT use the "Framewright" name or branding for your own project.
+- If you use Framewright's code or create code derived from Framewright you must attribute Framewright in the user-facing UI and the repo.
 
 Copyright (C) 2026 webadderall
+Copyright (C) 2026 Saksham Tushar (Framewright-specific modifications)
 
-Recordly is an independent application that started as a fork of the OpenScreen project, authored by Siddharth Vaddem (2025).
+Framewright is an independent application forked from Recordly (webadderall, 2026), which itself started as a fork of the OpenScreen project, authored by Siddharth Vaddem (2025). See NOTICE.md for the full attribution chain. Per Recordly's own license terms, Framewright does not use the "Recordly" name or branding and is not affiliated with or endorsed by the Recordly project.
 
 ---
 PART 1: THE AGPLv3 LICENSE 
