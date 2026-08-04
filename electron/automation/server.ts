@@ -45,6 +45,7 @@ const METHOD_TO_CHANNEL: Record<string, string> = {
 	"project.list": "list-project-files",
 	"project.read": "open-project-file-at-path",
 	"lifecycle.openEditor": "switch-to-editor",
+	"captions.generate": "generate-auto-captions",
 };
 
 function isRecording(): boolean {

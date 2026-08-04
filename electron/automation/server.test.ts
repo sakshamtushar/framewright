@@ -233,6 +233,33 @@ describe("dispatchRpcRequest", () => {
 		expect(response).toEqual({ jsonrpc: "2.0", id: 31, result: { id: "annotation-1" } });
 		spy.mockRestore();
 	});
+
+	it("captions.generate routes through the registry to generate-auto-captions", async () => {
+		ipcHandlerRegistry.set("generate-auto-captions", async (_event, options) => ({
+			success: true,
+			cues: [],
+			message: "ok",
+			receivedOptions: options,
+		}));
+
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 40,
+			method: "captions.generate",
+			params: { arg: { videoPath: "/tmp/video.mp4", whisperModelPath: "/tmp/model.bin" } },
+		});
+
+		expect(response).toEqual({
+			jsonrpc: "2.0",
+			id: 40,
+			result: {
+				success: true,
+				cues: [],
+				message: "ok",
+				receivedOptions: { videoPath: "/tmp/video.mp4", whisperModelPath: "/tmp/model.bin" },
+			},
+		});
+	});
 });
 
 describe("registerProjectHandlers", () => {
