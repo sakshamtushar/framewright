@@ -173,8 +173,8 @@ async function main() {
 
 	server.tool(
 		"generate_captions",
-		"Transcribe a video's audio into caption cues using the locally downloaded Whisper model, and apply them to the currently open editor. Requires the small Whisper model to already be downloaded (via the Recordly/Framewright app's caption settings UI) — fails with a clear error otherwise.",
-		{ videoPath: z.string(), language: z.string().optional() },
+		"Transcribe a video's audio into caption cues using the locally downloaded Whisper model, and apply them to the currently open editor. Requires the small Whisper model to already be downloaded (via the Recordly/Framewright app's caption settings UI) — fails with a clear error otherwise. If videoPath is omitted, defaults to the video currently loaded in the open editor.",
+		{ videoPath: z.string().optional(), language: z.string().optional() },
 		async (args) => toContent(await handlers.generate_captions(args)),
 	);
 

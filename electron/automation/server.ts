@@ -57,8 +57,11 @@ async function callChannel(channel: string, params: Record<string, unknown>): Pr
 	if (!handler) {
 		throw new Error(`No IPC handler registered for channel: ${channel}`);
 	}
-	// Every Phase-1 channel takes at most one positional argument beyond the
-	// event (source, filePath, etc.) or none at all — see METHOD_TO_CHANNEL callers.
+	// Registry-routed methods (METHOD_TO_CHANNEL) take at most one positional argument
+	// beyond the event (source, filePath, etc.) or none at all, so callers must wrap it
+	// as params.arg. This differs from EDITOR_BRIDGE_METHODS, whose params object is
+	// forwarded to the renderer as-is (see requestEditorState below) — do not confuse
+	// the two calling conventions when adding a new RPC method.
 	if ("arg" in params) {
 		return handler(FAKE_EVENT, params.arg);
 	}

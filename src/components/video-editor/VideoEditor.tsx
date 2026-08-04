@@ -3062,7 +3062,7 @@ export default function VideoEditor() {
 				let result: unknown;
 				switch (type) {
 					case "getState": {
-						result = currentPersistedEditorState;
+						result = { ...currentPersistedEditorState, sourcePath: currentSourcePath };
 						break;
 					}
 					case "addZoomRegion": {
@@ -3222,25 +3222,26 @@ export default function VideoEditor() {
 						if (typeof params.id !== "string") {
 							throw new Error("editCaption requires an id");
 						}
+						const targetId = params.id;
+						let nextCaptions: CaptionCue[];
 						switch (params.action) {
 							case "setText": {
 								if (typeof params.text !== "string") {
 									throw new Error("editCaption action 'setText' requires text");
 								}
-								const targetId = params.id;
 								const editText = params.text;
-								setAutoCaptions((captions) => {
-									const cue = captions.find((value) => value.id === targetId);
-									if (!cue) {
-										return captions;
-									}
-									const words = normalizeCaptionWords(cue);
-									if (words.length === 0) {
-										const normalized = normalizeCaptionEditText(editText);
-										return captions.map((value) =>
-											value.id === targetId ? { ...value, text: normalized } : value,
-										);
-									}
+								const cue = autoCaptions.find((value) => value.id === targetId);
+								if (!cue) {
+									nextCaptions = autoCaptions;
+									break;
+								}
+								const words = normalizeCaptionWords(cue);
+								if (words.length === 0) {
+									const normalized = normalizeCaptionEditText(editText);
+									nextCaptions = autoCaptions.map((value) =>
+										value.id === targetId ? { ...value, text: normalized } : value,
+									);
+								} else {
 									const target: CaptionEditTarget = {
 										id: cue.id,
 										startMs: cue.startMs,
@@ -3255,8 +3256,8 @@ export default function VideoEditor() {
 											leadingSpace: Boolean(word.leadingSpace),
 										})),
 									};
-									return updateCaptionCuesForEditedTarget(captions, target, editText);
-								});
+									nextCaptions = updateCaptionCuesForEditedTarget(autoCaptions, target, editText);
+								}
 								break;
 							}
 							case "retime": {
@@ -3269,34 +3270,36 @@ export default function VideoEditor() {
 									startMs: params.startMs,
 									endMs: params.endMs,
 								};
-								setAutoCaptions((captions) => retimeCue(captions, params.id as string, span));
+								nextCaptions = retimeCue(autoCaptions, targetId, span);
 								break;
 							}
 							case "split": {
 								if (typeof params.atMs !== "number") {
 									throw new Error("editCaption action 'split' requires numeric atMs");
 								}
-								setAutoCaptions((captions) =>
-									splitCue(captions, params.id as string, params.atMs as number),
-								);
+								nextCaptions = splitCue(autoCaptions, targetId, params.atMs);
 								break;
 							}
 							case "merge": {
 								if (typeof params.mergeWithId !== "string") {
 									throw new Error("editCaption action 'merge' requires mergeWithId");
 								}
-								setAutoCaptions((captions) =>
-									mergeCues(captions, params.id as string, params.mergeWithId as string),
-								);
+								nextCaptions = mergeCues(autoCaptions, targetId, params.mergeWithId);
 								break;
 							}
 							case "delete": {
-								setAutoCaptions((captions) => deleteCue(captions, params.id as string));
+								nextCaptions = deleteCue(autoCaptions, targetId);
 								break;
 							}
 							default:
 								throw new Error(`Unknown editCaption action: ${params.action}`);
 						}
+						if (nextCaptions === autoCaptions) {
+							throw new Error(
+								`editCaption action '${params.action}' had no effect on cue "${targetId}" — the cue may not exist, or the operation's preconditions weren't met (split requires ≥2 words, merge requires adjacent cues).`,
+							);
+						}
+						setAutoCaptions(nextCaptions);
 						result = { success: true };
 						break;
 					}
@@ -3313,7 +3316,7 @@ export default function VideoEditor() {
 		});
 
 		return () => cleanup?.();
-	}, [currentPersistedEditorState]);
+	}, [currentPersistedEditorState, currentSourcePath]);
 
 	const handleSaveProject = useCallback(async () => {
 		await saveProject(false);

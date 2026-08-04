@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import fs from "node:fs";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildToolHandlers } from "./tools.js";
 
 function fakeClient(responses: Record<string, unknown>) {
@@ -151,30 +152,70 @@ describe("buildToolHandlers", () => {
 		expect(client.call).toHaveBeenCalledWith("editor.addAnnotation", { startMs: 0, endMs: 2000, content: "Hello" });
 	});
 
-	it("generate_captions calls captions.generate then editor.setCaptions on success", async () => {
-		const client = fakeClient({
-			"captions.generate": { success: true, cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }], message: "ok" },
-			"editor.setCaptions": { success: true, count: 1 },
+	describe("generate_captions", () => {
+		afterEach(() => {
+			vi.restoreAllMocks();
 		});
-		const handlers = buildToolHandlers(client);
-		const result = await handlers.generate_captions({ videoPath: "/tmp/video.mp4" });
-		expect(result).toEqual({ success: true, count: 1 });
-		expect(client.call).toHaveBeenCalledWith(
-			"captions.generate",
-			expect.objectContaining({ arg: expect.objectContaining({ videoPath: "/tmp/video.mp4" }) }),
-		);
-		expect(client.call).toHaveBeenCalledWith("editor.setCaptions", {
-			cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }],
-		});
-	});
 
-	it("generate_captions does not call editor.setCaptions when transcription fails", async () => {
-		const client = fakeClient({
-			"captions.generate": { success: false, error: "model not found", message: "Failed to generate auto captions" },
+		it("calls captions.generate then editor.setCaptions on success", async () => {
+			vi.spyOn(fs, "existsSync").mockReturnValue(true);
+			const client = fakeClient({
+				"captions.generate": { success: true, cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }], message: "ok" },
+				"editor.setCaptions": { success: true, count: 1 },
+			});
+			const handlers = buildToolHandlers(client);
+			const result = await handlers.generate_captions({ videoPath: "/tmp/video.mp4" });
+			expect(result).toEqual({ success: true, count: 1 });
+			expect(client.call).toHaveBeenCalledWith(
+				"captions.generate",
+				expect.objectContaining({ arg: expect.objectContaining({ videoPath: "/tmp/video.mp4" }) }),
+			);
+			expect(client.call).toHaveBeenCalledWith("editor.setCaptions", {
+				cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }],
+			});
 		});
-		const handlers = buildToolHandlers(client);
-		await expect(handlers.generate_captions({ videoPath: "/tmp/video.mp4" })).rejects.toThrow();
-		expect(client.call).not.toHaveBeenCalledWith("editor.setCaptions", expect.anything());
+
+		it("does not call editor.setCaptions when transcription fails", async () => {
+			vi.spyOn(fs, "existsSync").mockReturnValue(true);
+			const client = fakeClient({
+				"captions.generate": { success: false, error: "model not found", message: "Failed to generate auto captions" },
+			});
+			const handlers = buildToolHandlers(client);
+			await expect(handlers.generate_captions({ videoPath: "/tmp/video.mp4" })).rejects.toThrow();
+			expect(client.call).not.toHaveBeenCalledWith("editor.setCaptions", expect.anything());
+		});
+
+		it("throws an actionable error and never calls the RPC client when the Whisper model isn't downloaded", async () => {
+			vi.spyOn(fs, "existsSync").mockReturnValue(false);
+			const client = fakeClient({});
+			const handlers = buildToolHandlers(client);
+			await expect(handlers.generate_captions({ videoPath: "/tmp/video.mp4" })).rejects.toThrow(
+				/Whisper caption model isn't downloaded/,
+			);
+			expect(client.call).not.toHaveBeenCalled();
+		});
+
+		it("defaults videoPath to the open editor's sourcePath when omitted", async () => {
+			vi.spyOn(fs, "existsSync").mockReturnValue(true);
+			const client = fakeClient({
+				"editor.getState": { sourcePath: "/tmp/open-editor-video.mp4" },
+				"captions.generate": { success: true, cues: [], message: "ok" },
+				"editor.setCaptions": { success: true, count: 0 },
+			});
+			const handlers = buildToolHandlers(client);
+			await handlers.generate_captions({});
+			expect(client.call).toHaveBeenCalledWith(
+				"captions.generate",
+				expect.objectContaining({ arg: expect.objectContaining({ videoPath: "/tmp/open-editor-video.mp4" }) }),
+			);
+		});
+
+		it("throws when videoPath is omitted and no editor sourcePath is available", async () => {
+			vi.spyOn(fs, "existsSync").mockReturnValue(true);
+			const client = fakeClient({ "editor.getState": { sourcePath: null } });
+			const handlers = buildToolHandlers(client);
+			await expect(handlers.generate_captions({})).rejects.toThrow(/no video is currently loaded/);
+		});
 	});
 
 	it("edit_caption forwards args directly to editor.editCaption", async () => {
