@@ -298,3 +298,21 @@ style/trim/webcam/annotation), and captions all succeeded in one continuous run.
   simpler empty-words branch was live-exercised; the word-timing branch was verified
   character-by-character against the real UI code in Task 2's review instead.
 - `edit_caption`'s `merge` action live — unit-tested only.
+
+### Fix-round re-verification (final whole-branch review)
+
+**Date:** 2026-08-04
+**Result:** ✅ Re-ran the full smoke driver against a live Framewright-dev instance after applying
+the final review's Important-severity fixes (silent no-op guard on `edit_caption`, actionable
+Whisper-model-missing error, `videoPath` defaulting) — same environment as above.
+
+- `generate_captions` now fails **fast**, before any RPC round-trip, with the new actionable
+  message ("The Whisper caption model isn't downloaded yet ... Open Framewright's caption settings
+  and download the small model, then retry.") instead of the deeper `ENOENT` from the transcription
+  handler — confirming the new up-front `fs.existsSync` check works against the real on-disk path.
+- `edit_caption`'s `setText`/`retime`/`delete` all still round-tripped correctly through
+  `get_project_state` with the new no-op existence guard in place — confirming the guard doesn't
+  false-positive on legitimate edits (it only throws when the underlying op returns the same array
+  reference unchanged).
+- The pre-existing "moov atom not found" flake reproduced again on `stop_recording` right after
+  pause→resume — same known, unrelated native-layer issue as every prior run.
