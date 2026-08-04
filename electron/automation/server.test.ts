@@ -234,6 +234,32 @@ describe("dispatchRpcRequest", () => {
 		spy.mockRestore();
 	});
 
+	it("editor.setCaptions forwards params directly as the payload", async () => {
+		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ success: true, count: 2 });
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 41,
+			method: "editor.setCaptions",
+			params: { cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }] },
+		});
+		expect(spy).toHaveBeenCalledWith("setCaptions", { cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }] });
+		expect(response).toEqual({ jsonrpc: "2.0", id: 41, result: { success: true, count: 2 } });
+		spy.mockRestore();
+	});
+
+	it("editor.editCaption forwards params directly as the payload", async () => {
+		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ success: true });
+		const response = await dispatchRpcRequest({
+			jsonrpc: "2.0",
+			id: 42,
+			method: "editor.editCaption",
+			params: { action: "delete", id: "c1" },
+		});
+		expect(spy).toHaveBeenCalledWith("editCaption", { action: "delete", id: "c1" });
+		expect(response).toEqual({ jsonrpc: "2.0", id: 42, result: { success: true } });
+		spy.mockRestore();
+	});
+
 	it("captions.generate routes through the registry to generate-auto-captions", async () => {
 		ipcHandlerRegistry.set("generate-auto-captions", async (_event, options) => ({
 			success: true,
