@@ -45,8 +45,8 @@ function resolveToolCommand(envNames, moduleName, fallbackName) {
 	return resolvePackageBinary(moduleName) || fallbackName;
 }
 
-const ffmpegCommand = resolveToolCommand(["RECORDLY_FFMPEG_EXE"], "ffmpeg-static", "ffmpeg");
-const ffprobeCommand = resolveToolCommand(["RECORDLY_FFPROBE_EXE"], "ffprobe-static", "ffprobe");
+const ffmpegCommand = resolveToolCommand(["FRAMEWRIGHT_FFMPEG_EXE"], "ffmpeg-static", "ffmpeg");
+const ffprobeCommand = resolveToolCommand(["FRAMEWRIGHT_FFPROBE_EXE"], "ffprobe-static", "ffprobe");
 
 const cursorTypes = [
 	"arrow",
@@ -117,7 +117,7 @@ function hasArg(name) {
 }
 
 function shouldRaiseChildPriority() {
-	return process.env.RECORDLY_NVIDIA_CUDA_EXPORT_HIGH_PRIORITY !== "0";
+	return process.env.FRAMEWRIGHT_NVIDIA_CUDA_EXPORT_HIGH_PRIORITY !== "0";
 }
 
 function raiseChildPriority(child, label) {
@@ -990,7 +990,7 @@ mkdirSync(workDir, { recursive: true });
 mkdirSync(dirname(outputPath), { recursive: true });
 
 function resolveNativeProbePath() {
-	const configuredPath = process.env.RECORDLY_NVIDIA_CUDA_EXPORT_EXE;
+	const configuredPath = process.env.FRAMEWRIGHT_NVIDIA_CUDA_EXPORT_EXE;
 	const platformArch = process.arch === "arm64" ? "win32-arm64" : "win32-x64";
 	const candidates = [
 		configuredPath,

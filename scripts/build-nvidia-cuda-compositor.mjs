@@ -26,7 +26,7 @@ const bundledExePath = path.join(bundledDir, "recordly-nvidia-cuda-compositor.ex
 const helperId = "recordly-nvidia-cuda-compositor";
 const generatorArch = process.arch === "arm64" ? "ARM64" : "x64";
 const videoCodecSdkRoot =
-	process.env.RECORDLY_NVIDIA_VIDEO_CODEC_SDK_ROOT?.trim() ||
+	process.env.FRAMEWRIGHT_NVIDIA_VIDEO_CODEC_SDK_ROOT?.trim() ||
 	path.join(projectRoot, ".tmp", "video-sdk-samples");
 
 if (process.platform !== "win32") {
@@ -117,7 +117,7 @@ function findCmake() {
 
 if (!existsSync(path.join(videoCodecSdkRoot, "Samples", "NvCodec"))) {
 	fallbackToBundledHelperOrExit(
-		`NVIDIA Video Codec SDK samples not found at ${videoCodecSdkRoot}. Set RECORDLY_NVIDIA_VIDEO_CODEC_SDK_ROOT to build from source.`,
+		`NVIDIA Video Codec SDK samples not found at ${videoCodecSdkRoot}. Set FRAMEWRIGHT_NVIDIA_VIDEO_CODEC_SDK_ROOT to build from source.`,
 	);
 }
 
@@ -246,7 +246,7 @@ try {
 		clearCache: clearCmakeCache,
 		configure: (generator, toolset) =>
 			execSync(
-				`${cmake} .. -G "${generator}" -A ${generatorArch}${toolset ? ` -T ${toolset}` : ""} -DRECORDLY_NVIDIA_VIDEO_CODEC_SDK_ROOT="${videoCodecSdkRoot}"`,
+				`${cmake} .. -G "${generator}" -A ${generatorArch}${toolset ? ` -T ${toolset}` : ""} -DFRAMEWRIGHT_NVIDIA_VIDEO_CODEC_SDK_ROOT="${videoCodecSdkRoot}"`,
 				{
 					cwd: buildDir,
 					stdio: "inherit",

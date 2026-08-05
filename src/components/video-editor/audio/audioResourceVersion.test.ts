@@ -43,7 +43,7 @@ describe("getAudioResourceVersionKey", () => {
 		expect(versionedUrl.searchParams.get("path")).toBe(
 			"C:\\Recordly\\recording.mic.wav",
 		);
-		expect(versionedUrl.searchParams.get("recordlyAudioVersion")).toBe("2");
+		expect(versionedUrl.searchParams.get("framewrightAudioVersion")).toBe("2");
 		expect(getVersionedAudioResourceUrl("https://cdn.example/audio.wav?sig=abc", 2)).toBe(
 			"https://cdn.example/audio.wav?sig=abc",
 		);
@@ -52,13 +52,13 @@ describe("getAudioResourceVersionKey", () => {
 	it("uses one cache scope for every version of a loopback resource", () => {
 		const baseUrl =
 			"http://127.0.0.1:43123/video?path=C%3A%5CRecordly%5Crecording.mic.wav";
-		const versionedUrl = `${baseUrl}&recordlyAudioVersion=4`;
+		const versionedUrl = `${baseUrl}&framewrightAudioVersion=4`;
 
 		expect(getAudioResourceCacheScope(versionedUrl)).toBe(baseUrl);
 		expect(
 			getAudioResourceCacheScope(
-				"https://cdn.example/audio.wav?recordlyAudioVersion=4&sig=abc",
+				"https://cdn.example/audio.wav?framewrightAudioVersion=4&sig=abc",
 			),
-		).toBe("https://cdn.example/audio.wav?recordlyAudioVersion=4&sig=abc");
+		).toBe("https://cdn.example/audio.wav?framewrightAudioVersion=4&sig=abc");
 	});
 });

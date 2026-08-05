@@ -12,9 +12,9 @@ async function main() {
 	const client = await getOrCreateConnection({ repoDir: REPO_DIR });
 	const handlers = buildToolHandlers(client);
 
-	const server = new McpServer({ name: "recordly", version: "0.1.0" });
+	const server = new McpServer({ name: "framewright", version: "0.1.0" });
 
-	server.tool("get_app_status", "Get whether Recordly is currently recording and its platform.", {}, async () =>
+	server.tool("get_app_status", "Get whether Framewright is currently recording and its platform.", {}, async () =>
 		toContent(await handlers.get_app_status({})),
 	);
 
@@ -52,18 +52,18 @@ async function main() {
 		toContent(await handlers.get_recording_status({})),
 	);
 
-	server.tool("list_projects", "List saved .recordly project files.", {}, async () =>
+	server.tool("list_projects", "List saved .framewright (or legacy .recordly) project files.", {}, async () =>
 		toContent(await handlers.list_projects({})),
 	);
 
 	server.tool(
 		"read_project",
-		"Read a .recordly project file's contents by path.",
+		"Read a .framewright (or legacy .recordly) project file's contents by path.",
 		{ filePath: z.string() },
 		async (args) => toContent(await handlers.read_project(args)),
 	);
 
-	server.tool("open_editor", "Open (or focus) Recordly's editor window.", {}, async () =>
+	server.tool("open_editor", "Open (or focus) Framewright's editor window.", {}, async () =>
 		toContent(await handlers.open_editor({})),
 	);
 
@@ -173,7 +173,7 @@ async function main() {
 
 	server.tool(
 		"generate_captions",
-		"Transcribe a video's audio into caption cues using the locally downloaded Whisper model, and apply them to the currently open editor. Requires the small Whisper model to already be downloaded (via the Recordly/Framewright app's caption settings UI) — fails with a clear error otherwise. If videoPath is omitted, defaults to the video currently loaded in the open editor.",
+		"Transcribe a video's audio into caption cues using the locally downloaded Whisper model, and apply them to the currently open editor. Requires the small Whisper model to already be downloaded (via Framewright's caption settings UI) — fails with a clear error otherwise. If videoPath is omitted, defaults to the video currently loaded in the open editor.",
 		{ videoPath: z.string().optional(), language: z.string().optional() },
 		async (args) => toContent(await handlers.generate_captions(args)),
 	);
@@ -202,6 +202,6 @@ function toContent(value: unknown) {
 }
 
 main().catch((error) => {
-	console.error("[recordly-mcp] Fatal error:", error);
+	console.error("[framewright-mcp] Fatal error:", error);
 	process.exit(1);
 });

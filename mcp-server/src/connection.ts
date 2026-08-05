@@ -36,6 +36,6 @@ export async function getOrCreateConnection(options: {
 	}
 
 	throw new Error(
-		"Timed out waiting for Framewright to start. Check that `npm run dev` succeeds in the Recordly repo.",
+		"Timed out waiting for Framewright to start. Check that `npm run dev` succeeds in the Framewright repo.",
 	);
 }

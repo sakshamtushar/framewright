@@ -334,10 +334,10 @@ export function registerProjectHandlers() {
       const defaultName = `${safeName}.${PROJECT_FILE_EXTENSION}`
 
       const result = await dialog.showSaveDialog({
-        title: 'Save Recordly Project',
+        title: 'Save Framewright Project',
         defaultPath: path.join(projectsDir, defaultName),
         filters: [
-          { name: 'Recordly Project', extensions: [PROJECT_FILE_EXTENSION] },
+          { name: 'Framewright Project', extensions: [PROJECT_FILE_EXTENSION] },
           { name: 'JSON', extensions: ['json'] }
         ],
         properties: ['createDirectory', 'showOverwriteConfirmation']
@@ -469,10 +469,10 @@ export function registerProjectHandlers() {
     try {
       const projectsDir = await getProjectsDir()
       const result = await dialog.showOpenDialog({
-        title: 'Open Recordly Project',
+        title: 'Open Framewright Project',
         defaultPath: projectsDir,
         filters: [
-          { name: 'Recordly Project', extensions: [PROJECT_FILE_EXTENSION, ...LEGACY_PROJECT_FILE_EXTENSIONS] },
+          { name: 'Framewright Project', extensions: [PROJECT_FILE_EXTENSION, ...LEGACY_PROJECT_FILE_EXTENSIONS] },
           { name: 'JSON', extensions: ['json'] },
           { name: 'All Files', extensions: ['*'] }
         ],

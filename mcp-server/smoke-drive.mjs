@@ -1,12 +1,12 @@
-// Automated smoke driver for Recordly MCP Phase 1.
+// Automated smoke driver for Framewright MCP Phase 1.
 // Exercises the real production code path (getOrCreateConnection + buildToolHandlers)
-// against a live Recordly instance — either attaching to one that's already running,
+// against a live Framewright instance — either attaching to one that's already running,
 // or spawning `npm run dev` itself, exactly as the MCP entrypoint (src/index.ts) would.
 //
-// Usage: node smoke-drive.mjs [--repo-dir=/path/to/Recordly]
+// Usage: node smoke-drive.mjs [--repo-dir=/path/to/framewright]
 //
 // This performs a REAL screen recording (a few seconds) and writes a real MP4 to
-// Recordly's dev recordings directory. It cleans up after itself.
+// Framewright's dev recordings directory. It cleans up after itself.
 
 import { getOrCreateConnection } from "./dist/connection.js";
 import { buildToolHandlers } from "./dist/tools.js";

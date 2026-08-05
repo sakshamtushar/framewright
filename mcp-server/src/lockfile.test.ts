@@ -15,7 +15,7 @@ describe("readLockfile", () => {
 	let dir: string;
 
 	beforeEach(async () => {
-		dir = await fs.mkdtemp(path.join(os.tmpdir(), "recordly-mcp-lockfile-test-"));
+		dir = await fs.mkdtemp(path.join(os.tmpdir(), "framewright-mcp-lockfile-test-"));
 		lockPath = path.join(dir, "mcp.lock.json");
 	});
 
