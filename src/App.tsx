@@ -14,8 +14,7 @@ export default function App() {
 	const [windowType, setWindowType] = useState("");
 	const { t } = useI18n();
 	const isMacOS = /mac/i.test(navigator.platform);
-	// TODO(rebrand-phase-b): swap for a Framewright-branded icon once one is generated.
-	const appIconSrc = "/app-icons/recordly-128.png";
+	const appIconSrc = "/app-icons/framewright-128.png";
 
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
