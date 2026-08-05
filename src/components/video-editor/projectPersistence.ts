@@ -127,7 +127,7 @@ export interface ProjectEditorState {
 	cursorSway: number;
 	borderRadius: number;
 	padding: Padding;
-	/** Selected frame ID (e.g. "recordly.frames/browser-dark"), or null for none */
+	/** Selected frame ID (e.g. "browser-dark"), or null for none */
 	frame: string | null;
 	cropRegion: CropRegion;
 	zoomRegions: ZoomRegion[];

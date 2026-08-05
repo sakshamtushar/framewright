@@ -50,7 +50,7 @@ describe("ThemeContext persistence", () => {
 	});
 
 	it("loads the persisted theme preference from Electron app settings", () => {
-		stubElectronSettings({ "recordly.theme": "dark" });
+		stubElectronSettings({ "framewright.theme": "dark" });
 
 		expect(loadThemePreference()).toBe("dark");
 	});
@@ -60,15 +60,30 @@ describe("ThemeContext persistence", () => {
 
 		persistThemePreference("dark");
 
-		expect(settingsStore.get("recordly.theme")).toBe("dark");
+		expect(settingsStore.get("framewright.theme")).toBe("dark");
 	});
 
 	it("falls back to localStorage when Electron settings are unavailable", () => {
 		vi.stubGlobal(
 			"localStorage",
-			createStorageMock({ "recordly.theme": "light" }),
+			createStorageMock({ "framewright.theme": "light" }),
 		);
 
 		expect(loadThemePreference()).toBe("light");
+	});
+
+	it("migrates the pre-rebrand app-setting key on first read", () => {
+		const settingsStore = stubElectronSettings({ "recordly.theme": "dark" });
+
+		expect(loadThemePreference()).toBe("dark");
+		expect(settingsStore.get("framewright.theme")).toBe("dark");
+	});
+
+	it("migrates the pre-rebrand localStorage key on first read", () => {
+		const storage = createStorageMock({ "recordly.theme": "light" });
+		vi.stubGlobal("localStorage", storage);
+
+		expect(loadThemePreference()).toBe("light");
+		expect(storage.getItem("framewright.theme")).toBe("light");
 	});
 });

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { loadAppSetting, saveAppSetting } from "@/lib/appSettings";
 
 export const NVIDIA_CUDA_EXPORT_OPT_IN_SETTING_KEY =
+	"framewright.export.experimentalNvidiaCuda";
+const LEGACY_NVIDIA_CUDA_EXPORT_OPT_IN_SETTING_KEY =
 	"recordly.export.experimentalNvidiaCuda";
 
 type NativeExportCapabilitiesResult = {
@@ -26,7 +28,19 @@ export function resolveNvidiaCudaExportOptIn(
 }
 
 export function loadInitialNvidiaCudaExportOptIn() {
-	return loadAppSetting<boolean>(NVIDIA_CUDA_EXPORT_OPT_IN_SETTING_KEY) === true;
+	const persisted = loadAppSetting<boolean>(NVIDIA_CUDA_EXPORT_OPT_IN_SETTING_KEY);
+	if (persisted !== null) {
+		return persisted === true;
+	}
+
+	// One-time migration from the pre-rebrand key.
+	const legacyPersisted = loadAppSetting<boolean>(LEGACY_NVIDIA_CUDA_EXPORT_OPT_IN_SETTING_KEY);
+	if (legacyPersisted !== null) {
+		saveAppSetting(NVIDIA_CUDA_EXPORT_OPT_IN_SETTING_KEY, legacyPersisted === true);
+		return legacyPersisted === true;
+	}
+
+	return false;
 }
 
 export function saveNvidiaCudaExportOptIn(enabled: boolean) {

@@ -18,10 +18,14 @@ export type {
 	ExtensionSettingsPanel,
 	ExtensionStatus,
 	FrameInstance,
+	FramewrightExtensionAPI,
+	FramewrightExtensionModule,
 	MarketplaceExtension,
 	MarketplaceReviewStatus,
 	MarketplaceSearchResult,
+	/** @deprecated Use FramewrightExtensionAPI. */
 	RecordlyExtensionAPI,
+	/** @deprecated Use FramewrightExtensionModule. */
 	RecordlyExtensionModule,
 	RenderHookContext,
 	RenderHookFn,

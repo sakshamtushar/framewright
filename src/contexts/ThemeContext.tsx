@@ -13,20 +13,37 @@ interface ThemeContextValue {
 	toggleTheme: () => void;
 }
 
-const THEME_STORAGE_KEY = "recordly.theme";
+const THEME_STORAGE_KEY = "framewright.theme";
+const LEGACY_THEME_STORAGE_KEY = "recordly.theme";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+function isThemePreference(value: unknown): value is ThemePreference {
+	return value === "light" || value === "dark" || value === "system";
+}
+
 export function loadThemePreference(): ThemePreference {
 	const persisted = loadAppSetting<unknown>(THEME_STORAGE_KEY);
-	if (persisted === "light" || persisted === "dark" || persisted === "system") {
+	if (isThemePreference(persisted)) {
 		return persisted;
+	}
+
+	// One-time migration from the pre-rebrand key.
+	const legacyPersisted = loadAppSetting<unknown>(LEGACY_THEME_STORAGE_KEY);
+	if (isThemePreference(legacyPersisted)) {
+		saveAppSetting(THEME_STORAGE_KEY, legacyPersisted);
+		return legacyPersisted;
 	}
 
 	try {
 		const stored = globalThis.localStorage?.getItem(THEME_STORAGE_KEY);
-		if (stored === "light" || stored === "dark" || stored === "system") {
+		if (isThemePreference(stored)) {
 			return stored;
+		}
+		const legacyStored = globalThis.localStorage?.getItem(LEGACY_THEME_STORAGE_KEY);
+		if (isThemePreference(legacyStored)) {
+			globalThis.localStorage?.setItem(THEME_STORAGE_KEY, legacyStored);
+			return legacyStored;
 		}
 	} catch {
 		// Ignore storage errors

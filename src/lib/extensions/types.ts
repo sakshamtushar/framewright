@@ -1,12 +1,13 @@
 /**
- * Recordly Extension System — Core Types
+ * Framewright Extension System — Core Types
  *
  * Extensions are renderer-loaded modules that can hook into the render pipeline,
  * bundle assets, register UI panels, and respond to playback/timeline events.
  */
 
 // ---------------------------------------------------------------------------
-// Extension Manifest (recordly-extension.json)
+// Extension Manifest (framewright-extension.json; recordly-extension.json
+// from before the Framewright rename is still accepted for existing extensions)
 // ---------------------------------------------------------------------------
 
 export interface ExtensionManifest {
@@ -24,7 +25,7 @@ export interface ExtensionManifest {
 	homepage?: string;
 	/** License identifier (SPDX) */
 	license?: string;
-	/** Minimum Recordly version required */
+	/** Minimum Framewright version required */
 	engine?: string;
 	/** Icon path relative to extension root */
 	icon?: string;
@@ -48,7 +49,7 @@ export type ExtensionPermission =
 /**
  * Optional manifest metadata for packaged assets.
  *
- * Recordly does not auto-register these entries at runtime today.
+ * Framewright does not auto-register these entries at runtime today.
  * Extensions still need to wire behavior from activate() via host APIs like
  * registerFrame(), registerSettingsPanel(), resolveAsset(), and playSound().
  */
@@ -415,7 +416,7 @@ export interface ExtensionSettingsPanel {
 // Extension API — The API object passed to extension activate()
 // ---------------------------------------------------------------------------
 
-export interface RecordlyExtensionAPI {
+export interface FramewrightExtensionAPI {
 	/** Register a render hook at a specific pipeline phase */
 	registerRenderHook(phase: RenderHookPhase, hook: RenderHookFn): () => void;
 
@@ -587,16 +588,22 @@ export interface RecordlyExtensionAPI {
 	): void;
 }
 
+/** @deprecated Use {@link FramewrightExtensionAPI}. Kept as a type alias for extensions written before the Framewright rename. */
+export type RecordlyExtensionAPI = FramewrightExtensionAPI;
+
 // ---------------------------------------------------------------------------
 // Extension Module — what the extension's main JS file must export
 // ---------------------------------------------------------------------------
 
-export interface RecordlyExtensionModule {
+export interface FramewrightExtensionModule {
 	/** Called when the extension is activated */
-	activate(api: RecordlyExtensionAPI): void | Promise<void>;
+	activate(api: FramewrightExtensionAPI): void | Promise<void>;
 	/** Called when the extension is deactivated */
 	deactivate?(): void | Promise<void>;
 }
+
+/** @deprecated Use {@link FramewrightExtensionModule}. Kept as a type alias for extensions written before the Framewright rename. */
+export type RecordlyExtensionModule = FramewrightExtensionModule;
 
 // ---------------------------------------------------------------------------
 // Device Frame — Runtime Instance (resolved paths)

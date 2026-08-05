@@ -87,7 +87,8 @@ import zhTWSettings from "@/i18n/locales/zh-TW/settings.json";
 import zhTWShortcuts from "@/i18n/locales/zh-TW/shortcuts.json";
 import zhTWTimeline from "@/i18n/locales/zh-TW/timeline.json";
 
-const LOCALE_STORAGE_KEY = "recordly.locale";
+const LOCALE_STORAGE_KEY = "framewright.locale";
+const LEGACY_LOCALE_STORAGE_KEY = "recordly.locale";
 
 type LocaleBundle = Record<I18nNamespace, Record<string, unknown>>;
 
@@ -256,6 +257,13 @@ function getInitialLocale(): AppLocale {
 	const storedLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
 	if (storedLocale) {
 		return normalizeLocale(storedLocale);
+	}
+
+	// One-time migration from the pre-rebrand key.
+	const legacyStoredLocale = window.localStorage.getItem(LEGACY_LOCALE_STORAGE_KEY);
+	if (legacyStoredLocale) {
+		window.localStorage.setItem(LOCALE_STORAGE_KEY, legacyStoredLocale);
+		return normalizeLocale(legacyStoredLocale);
 	}
 
 	return getSystemLocale();

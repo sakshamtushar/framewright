@@ -92,8 +92,10 @@ export interface EditorPreferences extends PersistedEditorControls {
 	whisperModelPath: string | null;
 }
 
-export const EDITOR_PREFERENCES_STORAGE_KEY = "recordly.editor.preferences";
-export const EDITOR_PRESETS_STORAGE_KEY = "recordly.editor.presets";
+export const EDITOR_PREFERENCES_STORAGE_KEY = "framewright.editor.preferences";
+export const EDITOR_PRESETS_STORAGE_KEY = "framewright.editor.presets";
+const LEGACY_EDITOR_PREFERENCES_STORAGE_KEY = "recordly.editor.preferences";
+const LEGACY_EDITOR_PRESETS_STORAGE_KEY = "recordly.editor.presets";
 
 const DEFAULT_EDITOR_CONTROLS = normalizeProjectEditor({});
 
@@ -453,13 +455,26 @@ export function loadEditorPreferences(): EditorPreferences {
 		return normalizeEditorPreferences(persisted);
 	}
 
+	// One-time migration from the pre-rebrand key.
+	const legacyPersisted = loadAppSetting<unknown>(LEGACY_EDITOR_PREFERENCES_STORAGE_KEY);
+	if (legacyPersisted !== null) {
+		saveAppSetting(EDITOR_PREFERENCES_STORAGE_KEY, legacyPersisted);
+		return normalizeEditorPreferences(legacyPersisted);
+	}
+
 	try {
 		const stored = globalThis.localStorage?.getItem(EDITOR_PREFERENCES_STORAGE_KEY);
-		if (!stored) {
+		if (stored) {
+			return normalizeEditorPreferences(JSON.parse(stored));
+		}
+
+		const legacyStored = globalThis.localStorage?.getItem(LEGACY_EDITOR_PREFERENCES_STORAGE_KEY);
+		if (!legacyStored) {
 			return DEFAULT_EDITOR_PREFERENCES;
 		}
 
-		return normalizeEditorPreferences(JSON.parse(stored));
+		saveLocalStorageJson(EDITOR_PREFERENCES_STORAGE_KEY, JSON.parse(legacyStored));
+		return normalizeEditorPreferences(JSON.parse(legacyStored));
 	} catch {
 		return DEFAULT_EDITOR_PREFERENCES;
 	}
@@ -496,13 +511,26 @@ export function loadEditorPresets(): EditorPreset[] {
 		return normalizeEditorPresets(persisted);
 	}
 
+	// One-time migration from the pre-rebrand key.
+	const legacyPersisted = loadAppSetting<unknown>(LEGACY_EDITOR_PRESETS_STORAGE_KEY);
+	if (legacyPersisted !== null) {
+		saveAppSetting(EDITOR_PRESETS_STORAGE_KEY, legacyPersisted);
+		return normalizeEditorPresets(legacyPersisted);
+	}
+
 	try {
 		const stored = globalThis.localStorage?.getItem(EDITOR_PRESETS_STORAGE_KEY);
-		if (!stored) {
+		if (stored) {
+			return normalizeEditorPresets(JSON.parse(stored));
+		}
+
+		const legacyStored = globalThis.localStorage?.getItem(LEGACY_EDITOR_PRESETS_STORAGE_KEY);
+		if (!legacyStored) {
 			return [];
 		}
 
-		return normalizeEditorPresets(JSON.parse(stored));
+		saveLocalStorageJson(EDITOR_PRESETS_STORAGE_KEY, JSON.parse(legacyStored));
+		return normalizeEditorPresets(JSON.parse(legacyStored));
 	} catch {
 		return [];
 	}

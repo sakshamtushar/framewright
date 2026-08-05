@@ -19,14 +19,15 @@ import type {
 	ExtensionInfo,
 	ExtensionSettingsPanel,
 	FrameInstance,
-	RecordlyExtensionAPI,
-	RecordlyExtensionModule,
+	FramewrightExtensionAPI,
+	FramewrightExtensionModule,
 	RenderHookContext,
 	RenderHookFn,
 	RenderHookPhase,
 } from "./types";
 
-const EXTENSION_SETTINGS_STORAGE_KEY = "recordly.extension-settings.v1";
+const EXTENSION_SETTINGS_STORAGE_KEY = "framewright.extension-settings.v1";
+const LEGACY_EXTENSION_SETTINGS_STORAGE_KEY = "recordly.extension-settings.v1";
 
 // ---------------------------------------------------------------------------
 // Security: Hide electronAPI from extension code
@@ -118,7 +119,7 @@ interface RegisteredCursorStyle {
 
 interface ActiveExtension {
 	info: ExtensionInfo;
-	module: RecordlyExtensionModule;
+	module: FramewrightExtensionModule;
 	disposables: (() => void)[];
 }
 
@@ -203,14 +204,14 @@ export class ExtensionHost {
 		}
 
 		const disposables: (() => void)[] = [];
-		let mod: RecordlyExtensionModule | null = null;
+		let mod: FramewrightExtensionModule | null = null;
 		try {
 			this.ensureExtensionSettingsLoaded(info.manifest.id);
 
 			// Block electronAPI access while extension code executes
 			_extensionActivationDepth++;
 			try {
-				const loaded: RecordlyExtensionModule = await import(/* @vite-ignore */ moduleUrl);
+				const loaded: FramewrightExtensionModule = await import(/* @vite-ignore */ moduleUrl);
 				mod = loaded;
 				const api = this.createAPI(
 					info.manifest.id,
@@ -558,9 +559,20 @@ export class ExtensionHost {
 		}
 
 		try {
-			const raw = window.localStorage.getItem(EXTENSION_SETTINGS_STORAGE_KEY);
+			let raw = window.localStorage.getItem(EXTENSION_SETTINGS_STORAGE_KEY);
 			if (!raw) {
-				return {};
+				// One-time migration from the pre-rebrand key — read it once, and if
+				// found, copy it forward so future reads hit the new key directly.
+				const legacyRaw = window.localStorage.getItem(LEGACY_EXTENSION_SETTINGS_STORAGE_KEY);
+				if (!legacyRaw) {
+					return {};
+				}
+				raw = legacyRaw;
+				try {
+					window.localStorage.setItem(EXTENSION_SETTINGS_STORAGE_KEY, legacyRaw);
+				} catch {
+					// Ignore storage quota / privacy mode failures — fall through and use the legacy value for this session.
+				}
 			}
 
 			const parsed = JSON.parse(raw);
@@ -645,7 +657,7 @@ export class ExtensionHost {
 		extensionPath: string,
 		permissions: string[],
 		disposables: (() => void)[],
-	): RecordlyExtensionAPI {
+	): FramewrightExtensionAPI {
 		const host = this;
 		const perms = new Set(permissions);
 

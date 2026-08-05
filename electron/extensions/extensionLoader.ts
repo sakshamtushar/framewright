@@ -2,7 +2,7 @@
  * Extension Loader — Main Process
  *
  * Discovers, validates, and manages extensions installed in the
- * extensions directory (~/.recordly/extensions/ or userData/extensions/).
+ * extensions directory (userData/extensions/).
  *
  * Extensions are loaded from disk by reading their manifest files.
  * The actual extension code runs in the renderer process and uses the
@@ -16,9 +16,23 @@ import { app } from "electron";
 import type { ExtensionInfo, ExtensionManifest, ExtensionStatus } from "./extensionTypes";
 
 const EXTENSIONS_DIR_NAME = "extensions";
-const MANIFEST_FILE_NAME = "recordly-extension.json";
+export const MANIFEST_FILE_NAME = "framewright-extension.json";
+/** Older manifest filenames still accepted for extensions authored before the Framewright rename. */
+export const LEGACY_MANIFEST_FILE_NAMES = ["recordly-extension.json"];
 const BUILTIN_EXTENSIONS_DIR = "builtin-extensions";
 const EXTENSION_STATE_FILE_NAME = "extension-state.json";
+
+/**
+ * Resolves the manifest file path inside an extension directory, checking the
+ * canonical filename first and falling back to legacy names.
+ */
+function resolveManifestPath(extensionDir: string): string | null {
+	for (const fileName of [MANIFEST_FILE_NAME, ...LEGACY_MANIFEST_FILE_NAMES]) {
+		const candidate = path.join(extensionDir, fileName);
+		if (existsSync(candidate)) return candidate;
+	}
+	return null;
+}
 
 /** In-memory registry of loaded extensions */
 const extensionRegistry = new Map<string, ExtensionInfo>();
@@ -194,8 +208,8 @@ async function scanExtensionsIn(directory: string, builtin: boolean): Promise<Ex
 		}
 		if (!stat.isDirectory()) continue;
 
-		const manifestPath = path.join(extDir, MANIFEST_FILE_NAME);
-		if (!existsSync(manifestPath)) continue;
+		const manifestPath = resolveManifestPath(extDir);
+		if (!manifestPath) continue;
 
 		try {
 			const raw = await fs.readFile(manifestPath, "utf-8");
@@ -334,8 +348,8 @@ export async function setExtensionStatus(id: string, status: ExtensionStatus): P
  * Install an extension from a directory (copy to extensions dir).
  */
 export async function installExtensionFromPath(sourcePath: string): Promise<ExtensionInfo | null> {
-	const manifestPath = path.join(sourcePath, MANIFEST_FILE_NAME);
-	if (!existsSync(manifestPath)) {
+	const manifestPath = resolveManifestPath(sourcePath);
+	if (!manifestPath) {
 		return null;
 	}
 

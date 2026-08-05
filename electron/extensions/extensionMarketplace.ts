@@ -2,7 +2,7 @@
  * Extension Marketplace — Main Process
  *
  * Handles fetching, downloading, and installing extensions from the
- * Recordly marketplace API. Also provides admin review endpoints.
+ * Framewright marketplace API. Also provides admin review endpoints.
  */
 
 import { createWriteStream, existsSync } from "node:fs";
@@ -13,7 +13,12 @@ import { pipeline } from "node:stream/promises";
 import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import { app } from "electron";
 import { formatMarketplaceHttpError, getErrorMessage } from "./errorUtils";
-import { getRegisteredExtensions, installExtensionFromPath } from "./extensionLoader";
+import {
+	getRegisteredExtensions,
+	installExtensionFromPath,
+	LEGACY_MANIFEST_FILE_NAMES,
+	MANIFEST_FILE_NAME,
+} from "./extensionLoader";
 import type {
 	ExtensionReview,
 	MarketplaceExtension,
@@ -25,7 +30,7 @@ import type {
 // Configuration
 // ---------------------------------------------------------------------------
 
-const MARKETPLACE_API_BASE = "https://marketplace.recordly.dev/extensions/api/v1";
+const MARKETPLACE_API_BASE = "https://marketplace.framewright.dev/extensions/api/v1";
 const REQUEST_TIMEOUT_MS = 15_000;
 
 // ---------------------------------------------------------------------------
@@ -54,12 +59,12 @@ async function assertNoEscapedFiles(dir: string, root: string): Promise<void> {
 
 function getMarketplaceUrl(): string {
 	// Allow explicit override for local marketplace development.
-	if (process.env.RECORDLY_MARKETPLACE_URL) return process.env.RECORDLY_MARKETPLACE_URL;
+	if (process.env.FRAMEWRIGHT_MARKETPLACE_URL) return process.env.FRAMEWRIGHT_MARKETPLACE_URL;
 	return MARKETPLACE_API_BASE;
 }
 
 function getAdminKey(): string | undefined {
-	return process.env.RECORDLY_ADMIN_KEY;
+	return process.env.FRAMEWRIGHT_ADMIN_KEY;
 }
 
 // ---------------------------------------------------------------------------
@@ -77,14 +82,14 @@ async function marketplaceFetch<T>(
 	try {
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
-			"X-Recordly-Version": app.getVersion(),
-			"X-Recordly-Platform": process.platform,
+			"X-Framewright-Version": app.getVersion(),
+			"X-Framewright-Platform": process.platform,
 		};
 
 		// Attach admin key for privileged endpoints
 		if (options.admin) {
 			const key = getAdminKey();
-			if (!key) throw new Error("Admin key not configured (set RECORDLY_ADMIN_KEY env var)");
+			if (!key) throw new Error("Admin key not configured (set FRAMEWRIGHT_ADMIN_KEY env var)");
 			headers["X-Admin-Key"] = key;
 		}
 
@@ -174,8 +179,8 @@ export async function downloadAndInstallExtension(
 ): Promise<{ success: boolean; error?: string }> {
 	// Validate download URL against allowed marketplace origins
 	const allowedOrigins = [
-		"https://marketplace.recordly.dev",
-		"https://recordly.dev",
+		"https://marketplace.framewright.dev",
+		"https://framewright.dev",
 		...(app.isPackaged ? [] : ["http://localhost:3001"]),
 	];
 	try {
@@ -187,7 +192,7 @@ export async function downloadAndInstallExtension(
 		return { success: false, error: "Invalid download URL" };
 	}
 
-	const tempDir = path.join(app.getPath("temp"), `recordly-ext-${extensionId}-${Date.now()}`);
+	const tempDir = path.join(app.getPath("temp"), `framewright-ext-${extensionId}-${Date.now()}`);
 	const zipPath = path.join(tempDir, "extension.zip");
 
 	try {
@@ -203,7 +208,7 @@ export async function downloadAndInstallExtension(
 			response = await fetch(downloadUrl, {
 				signal: controller.signal,
 				headers: {
-					"X-Recordly-Version": app.getVersion(),
+					"X-Framewright-Version": app.getVersion(),
 				},
 			});
 		} finally {
@@ -270,16 +275,17 @@ export async function downloadAndInstallExtension(
 		let manifestDir = extractDir;
 
 		// If there's a single directory, look inside it for the manifest.
+		const manifestFileNames = [MANIFEST_FILE_NAME, ...LEGACY_MANIFEST_FILE_NAMES];
+		const hasManifestAt = (dir: string) =>
+			manifestFileNames.some((fileName) => existsSync(path.join(dir, fileName)));
 		const dirs = entries.filter((e) => e.isDirectory());
-		if (dirs.length === 1 && !existsSync(path.join(extractDir, "recordly-extension.json"))) {
+		if (dirs.length === 1 && !hasManifestAt(extractDir)) {
 			manifestDir = path.join(extractDir, dirs[0].name);
 		}
 
 		// Verify manifest exists
-		if (!existsSync(path.join(manifestDir, "recordly-extension.json"))) {
-			throw new Error(
-				"Downloaded extension does not contain a recordly-extension.json manifest",
-			);
+		if (!hasManifestAt(manifestDir)) {
+			throw new Error(`Downloaded extension does not contain a ${MANIFEST_FILE_NAME} manifest`);
 		}
 
 		// Install from the extracted directory
@@ -291,7 +297,7 @@ export async function downloadAndInstallExtension(
 		// Track download count (fire-and-forget — CDN may cache the GET, so POST separately)
 		fetch(`${getMarketplaceUrl()}/extensions/${encodeURIComponent(extensionId)}/download`, {
 			method: "POST",
-			headers: { "X-Recordly-Version": app.getVersion() },
+			headers: { "X-Framewright-Version": app.getVersion() },
 		}).catch(() => undefined);
 
 		return { success: true };

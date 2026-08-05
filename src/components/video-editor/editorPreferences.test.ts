@@ -347,6 +347,65 @@ describe("editorPreferences", () => {
 		});
 	});
 
+	it("migrates editor preferences from the pre-rebrand Electron app-settings key", () => {
+		const settingsStore = stubElectronSettings({
+			"recordly.editor.preferences": {
+				wallpaper: "#0f172a",
+				customAspectWidth: "3",
+				customAspectHeight: "2",
+			},
+		});
+
+		expect(loadEditorPreferences()).toMatchObject({
+			wallpaper: "#0f172a",
+			customAspectWidth: "3",
+			customAspectHeight: "2",
+		});
+		expect(settingsStore.get(EDITOR_PREFERENCES_STORAGE_KEY)).toMatchObject({
+			wallpaper: "#0f172a",
+		});
+	});
+
+	it("migrates editor preferences from the pre-rebrand localStorage key", () => {
+		const localStorage = createStorageMock({
+			"recordly.editor.preferences": JSON.stringify({
+				wallpaper: "#0f172a",
+				customAspectWidth: "3",
+				customAspectHeight: "2",
+			}),
+		});
+		vi.stubGlobal("localStorage", localStorage);
+
+		expect(loadEditorPreferences()).toMatchObject({
+			wallpaper: "#0f172a",
+			customAspectWidth: "3",
+			customAspectHeight: "2",
+		});
+		expect(localStorage.getItem(EDITOR_PREFERENCES_STORAGE_KEY)).not.toBeNull();
+	});
+
+	it("migrates editor presets from the pre-rebrand localStorage key", () => {
+		const localStorage = createStorageMock({
+			"recordly.editor.presets": JSON.stringify([
+				{
+					id: "preset-1",
+					name: "Demo Preset",
+					createdAt: "2026-05-01T00:00:00.000Z",
+					updatedAt: "2026-05-01T00:00:00.000Z",
+					snapshot: {
+						...DEFAULT_EDITOR_PREFERENCES,
+						cropRegion: DEFAULT_CROP_REGION,
+						autoCaptionSettings: DEFAULT_AUTO_CAPTION_SETTINGS,
+					},
+				},
+			]),
+		});
+		vi.stubGlobal("localStorage", localStorage);
+
+		expect(loadEditorPresets()).toMatchObject([{ id: "preset-1", name: "Demo Preset" }]);
+		expect(localStorage.getItem(EDITOR_PRESETS_STORAGE_KEY)).not.toBeNull();
+	});
+
 	it("saves editor presets and reports success", () => {
 		const localStorage = createStorageMock();
 		vi.stubGlobal("localStorage", localStorage);
