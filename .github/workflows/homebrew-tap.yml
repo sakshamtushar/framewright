@@ -10,7 +10,7 @@ on:
       tap_repo:
         description: "Tap repository in owner/repo format"
         required: false
-        default: "webadderall/homebrew-tap"
+        default: "sakshamtushar/homebrew-tap"
         type: string
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-      TAP_REPO: ${{ github.event.inputs.tap_repo || vars.HOMEBREW_TAP_REPO || 'webadderall/homebrew-tap' }}
+      TAP_REPO: ${{ github.event.inputs.tap_repo || vars.HOMEBREW_TAP_REPO || 'sakshamtushar/homebrew-tap' }}
       AUTO_MERGE_TAP_PR: ${{ vars.HOMEBREW_TAP_AUTO_MERGE || 'true' }}
     steps:
       - name: Validate token
@@ -50,20 +50,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/recordly-release
+          mkdir -p /tmp/framewright-release
           gh release download "${{ steps.tag.outputs.tag }}" \
             --repo "${{ github.repository }}" \
-            --dir /tmp/recordly-release \
-            --pattern "Recordly-*-arm64.dmg" \
-            --pattern "Recordly-*-x64.dmg"
+            --dir /tmp/framewright-release \
+            --pattern "Framewright-*-arm64.dmg" \
+            --pattern "Framewright-*-x64.dmg"
 
       - name: Compute checksums
         id: sha
         shell: bash
         run: |
           set -euo pipefail
-          ARM_FILE=$(find /tmp/recordly-release -maxdepth 1 -name 'Recordly-*-arm64.dmg' | head -n 1)
-          INTEL_FILE=$(find /tmp/recordly-release -maxdepth 1 -name 'Recordly-*-x64.dmg' | head -n 1)
+          ARM_FILE=$(find /tmp/framewright-release -maxdepth 1 -name 'Framewright-*-arm64.dmg' | head -n 1)
+          INTEL_FILE=$(find /tmp/framewright-release -maxdepth 1 -name 'Framewright-*-x64.dmg' | head -n 1)
 
           if [ -z "$ARM_FILE" ] || [ -z "$INTEL_FILE" ]; then
             echo "Unable to locate macOS release artifacts for ${{ steps.tag.outputs.tag }}"
@@ -91,11 +91,11 @@ jobs:
           cd /tmp/homebrew-tap
           mkdir -p Casks
 
-          BRANCH="recordly-cask-${{ steps.tag.outputs.tag }}"
+          BRANCH="framewright-cask-${{ steps.tag.outputs.tag }}"
           git checkout -B "$BRANCH"
 
-          cat > Casks/recordly.rb <<'RUBY'
-          cask "recordly" do
+          cat > Casks/framewright.rb <<'RUBY'
+          cask "framewright" do
             version "__VERSION__"
 
             on_arm do
@@ -108,21 +108,21 @@ jobs:
               url "https://github.com/__REPO__/releases/download/__TAG__/__INTEL_FILE__"
             end
 
-            name "Recordly"
+            name "Framewright"
             desc "Open-source screen recorder and editor"
-            homepage "https://www.recordly.dev"
+            homepage "https://www.framewright.dev"
 
-            app "Recordly.app"
+            app "Framewright.app"
           end
           RUBY
 
-          sed -i "s/__VERSION__/${{ steps.tag.outputs.version }}/g" Casks/recordly.rb
-          sed -i "s/__SHA_ARM__/${{ steps.sha.outputs.arm }}/g" Casks/recordly.rb
-          sed -i "s/__SHA_INTEL__/${{ steps.sha.outputs.intel }}/g" Casks/recordly.rb
-          sed -i "s#__REPO__#${{ github.repository }}#g" Casks/recordly.rb
-          sed -i "s#__TAG__#${{ steps.tag.outputs.tag }}#g" Casks/recordly.rb
-          sed -i "s#__ARM_FILE__#${{ steps.sha.outputs.arm_file }}#g" Casks/recordly.rb
-          sed -i "s#__INTEL_FILE__#${{ steps.sha.outputs.intel_file }}#g" Casks/recordly.rb
+          sed -i "s/__VERSION__/${{ steps.tag.outputs.version }}/g" Casks/framewright.rb
+          sed -i "s/__SHA_ARM__/${{ steps.sha.outputs.arm }}/g" Casks/framewright.rb
+          sed -i "s/__SHA_INTEL__/${{ steps.sha.outputs.intel }}/g" Casks/framewright.rb
+          sed -i "s#__REPO__#${{ github.repository }}#g" Casks/framewright.rb
+          sed -i "s#__TAG__#${{ steps.tag.outputs.tag }}#g" Casks/framewright.rb
+          sed -i "s#__ARM_FILE__#${{ steps.sha.outputs.arm_file }}#g" Casks/framewright.rb
+          sed -i "s#__INTEL_FILE__#${{ steps.sha.outputs.intel_file }}#g" Casks/framewright.rb
 
           if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -131,8 +131,8 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Casks/recordly.rb
-          git commit -m "chore(cask): update recordly to ${{ steps.tag.outputs.tag }}"
+          git add Casks/framewright.rb
+          git commit -m "chore(cask): update framewright to ${{ steps.tag.outputs.tag }}"
           git push --force-with-lease origin "$BRANCH"
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -153,7 +153,7 @@ jobs:
           fi
 
           PR_URL=$(gh pr create \
-            --title "chore(cask): update recordly to ${{ steps.tag.outputs.tag }}" \
+            --title "chore(cask): update framewright to ${{ steps.tag.outputs.tag }}" \
             --body "Automated cask update for ${{ steps.tag.outputs.tag }}.\n\n- arm64 sha256: \\`${{ steps.sha.outputs.arm }}\\`\n- x64 sha256: \\`${{ steps.sha.outputs.intel }}\\`" \
             --head "${{ steps.update.outputs.branch }}" \
             --base main)

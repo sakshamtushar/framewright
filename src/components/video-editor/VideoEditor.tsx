@@ -5905,7 +5905,7 @@ export default function VideoEditor() {
 						<DialogDescription className="text-muted-foreground">
 							{t(
 								"editor.project.saveDescription",
-								"Name this project. It will be saved in your Recordly Projects folder.",
+								"Name this project. It will be saved in your Framewright Projects folder.",
 							)}
 						</DialogDescription>
 					</DialogHeader>
@@ -6019,7 +6019,7 @@ export default function VideoEditor() {
 					<DialogDescription className="text-muted-foreground">
 						{t(
 							"editor.nativeCaptureUnavailable.description",
-							"Your device does not support native capture. This could be for a variety of reasons we haven’t figured out yet. This doesn’t break Recordly, but it does make cursor smoothing impossible.",
+							"Your device does not support native capture. This could be for a variety of reasons we haven’t figured out yet. This doesn’t break Framewright, but it does make cursor smoothing impossible.",
 						)}
 					</DialogDescription>
 				</DialogHeader>
