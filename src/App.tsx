@@ -14,6 +14,7 @@ export default function App() {
 	const [windowType, setWindowType] = useState("");
 	const { t } = useI18n();
 	const isMacOS = /mac/i.test(navigator.platform);
+	// TODO(rebrand-phase-b): swap for a Framewright-branded icon once one is generated.
 	const appIconSrc = "/app-icons/recordly-128.png";
 
 	useEffect(() => {
@@ -52,8 +53,8 @@ export default function App() {
 	useEffect(() => {
 		document.title =
 			windowType === "editor"
-				? t("app.editorTitle", "Recordly Editor")
-				: t("app.name", "Recordly");
+				? t("app.editorTitle", "Framewright Editor")
+				: t("app.name", "Framewright");
 	}, [windowType, t]);
 
 	switch (windowType) {
@@ -83,12 +84,12 @@ export default function App() {
 					<div className="flex items-center gap-4 rounded-2xl border border-foreground/10 bg-foreground/5 px-6 py-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
 						<img
 							src={appIconSrc}
-							alt={t("app.name", "Recordly")}
+							alt={t("app.name", "Framewright")}
 							className="h-12 w-12 rounded-xl"
 						/>
 						<div>
 							<h1 className="text-xl font-semibold tracking-tight">
-								{t("app.name", "Recordly")}
+								{t("app.name", "Framewright")}
 							</h1>
 							<p className="text-sm text-foreground/65">
 								{t("app.subtitle", "Screen recording and editing")}

@@ -176,10 +176,9 @@ import { getDevOpenRecordingConfig, getSmokeExportConfig } from "./smokeExportCo
 import { createSmokeExportProgressSampler } from "./smokeExportProgress";
 import {
 	APP_HEADER_ICON_BUTTON_CLASS,
-	DiscordLinkButton,
 	FeedbackDialog,
+	FRAMEWRIGHT_ISSUES_URL,
 	openExternalLink,
-	RECORDLY_ISSUES_URL,
 } from "./TutorialHelp";
 import TimelineEditor, { type TimelineEditorHandle } from "./timeline/TimelineEditor";
 import {
@@ -5728,7 +5727,7 @@ export default function VideoEditor() {
 
 	const openLightningIssues = useCallback(async () => {
 		await openExternalLink(
-			RECORDLY_ISSUES_URL,
+			FRAMEWRIGHT_ISSUES_URL,
 			t("editor.feedback.openFailed", "Failed to open link."),
 		);
 	}, [t]);
@@ -6090,7 +6089,6 @@ export default function VideoEditor() {
 					>
 						<FolderOpen className="h-4 w-4" />
 					</Button>
-					<DiscordLinkButton />
 					<FeedbackDialog />
 					<div className="ml-1 h-5 w-px bg-foreground/10" />
 					<Button

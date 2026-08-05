@@ -48,15 +48,15 @@ function getToastTitle(payload: UpdateToastPayload) {
 
 	switch (payload.phase) {
 		case "available":
-			return `Recordly ${payload.version} is available`;
+			return `Framewright ${payload.version} is available`;
 		case "downloading":
-			return `Installing Recordly ${payload.version}`;
+			return `Installing Framewright ${payload.version}`;
 		case "ready":
-			return `Recordly ${payload.version} is ready`;
+			return `Framewright ${payload.version} is ready`;
 		case "error":
 			return payload.primaryAction === "retry-check"
 				? "Could not check for updates"
-				: `Recordly ${payload.version} needs attention`;
+				: `Framewright ${payload.version} needs attention`;
 	}
 }
 
