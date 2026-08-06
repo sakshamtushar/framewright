@@ -9,19 +9,27 @@ Language: EN | [简中](README.zh-CN.md)
   <img src="https://img.shields.io/badge/open%20source-AGPL3.0-e5af89?style=for-the-badge" alt="AGPL 3.0 license" />
 </p>
 
-### Create polished demo videos in minutes
-[Framewright](https://www.framewright.dev) is your **open-source screen recorder** and editor for **walkthroughs, demos, product videos**, and more.
+### The screen recorder an AI agent can actually drive
+[Framewright](https://www.framewright.dev) is an **open-source, AI-native screen recorder and editor**. Every part of the workflow — start/stop a recording, add zooms, trim clips, style the frame, overlay a webcam, generate and edit captions — is exposed as an [MCP](https://modelcontextprotocol.io) tool, so an AI harness like Claude can drive the entire pipeline end to end. Point it at Framewright and ask for a polished demo video; it can record, edit, and produce one without you touching the timeline.
 **Accepting PRs.**
 
 <img width="1280" height="720" alt="MP4 to GIF export (4)" src="https://github.com/user-attachments/assets/e6d68606-5fc0-4f70-99cd-7521982dc13b" />
 
-> Framewright is a fork of [Recordly](https://github.com/webadderallorg/Recordly), rebranded and maintained independently under the same AGPLv3 terms. See [NOTICE.md](NOTICE.md) for the full attribution chain.
+## Why Framewright?
+
+Plenty of screen recorders can add a zoom or a webcam bubble. Framewright's difference is that **none of that lives only behind a mouse click** — it's all reachable through a real, local MCP server:
+
+- **A full MCP control surface, not a demo integration.** 18 tools today (recording lifecycle, zoom/trim/frame-style/webcam/annotation editing, caption generation and editing), with export control next on the roadmap. See [`mcp-server/README.md`](mcp-server/README.md) for the full catalog.
+- **Local, opt-in, and auditable.** The automation server only starts when you explicitly set a token env var, binds to `127.0.0.1` only, and every tool call goes through the exact same code path the UI itself uses — no separate "AI mode" logic to trust.
+- **Still a complete editor by hand.** Everything the MCP layer can do, you can also do yourself: auto-zoom suggestions, cursor polish, styled frames, timeline editing, webcam overlays, MP4/GIF export.
+
+Jump to [AI / MCP Control](#ai--mcp-control) for how to connect an agent, or keep reading for the full feature set.
 
 ---
 
 ## What is Framewright?
 
-Framewright is a desktop app for recording and editing screen captures with motion-driven presentation tools built in. Instead of sending raw footage to a motion designer just to add zooms, cursor polish, or a styled background, Framewright handles that workflow in one place for free.
+Framewright is a desktop app for recording and editing screen captures, built so the entire workflow — capture, zoom, cursor polish, frame styling, captions, export — can be driven either by hand in the editor or programmatically by an AI agent through MCP. No motion designer, no manual timeline work required for either path.
 
 Framewright runs on:
 
@@ -34,6 +42,30 @@ Platform notes:
 - **macOS** uses native ScreenCaptureKit-based capture helpers.
 - **Windows** uses a native Windows Graphics Capture (WGC) helper on supported builds, with native WASAPI audio support.
 - **Linux** records through Electron capture APIs. Cursor hiding is not supported on Linux today.
+
+---
+
+# AI / MCP Control
+
+This is the reason Framewright exists as its own project rather than just being Recordly with a new coat of paint.
+
+Framewright ships a built-in [MCP](https://modelcontextprotocol.io) server (`mcp-server/`) that lets an AI harness — Claude, or any MCP-compatible client — drive the app the same way a person would: pick a source, start recording, pause/resume/stop, jump into the editor, add zoom regions, trim clips, style the frame, position a webcam overlay, drop in annotations, generate captions from the recording's audio, and edit them. 18 tools today, with export control next on the roadmap.
+
+```
+"Record my screen for the next demo, then add a zoom on the button click, add a
+subtle webcam bubble in the corner, generate captions, and export it."
+```
+
+That's the workflow this is built for — an agent doing the recording-to-polished-video pipeline, not just triggering a single "record" button.
+
+**How it works, briefly:**
+
+- A localhost-only WebSocket JSON-RPC server runs inside Framewright's Electron main process — it only starts when you explicitly set `FRAMEWRIGHT_MCP_TOKEN`, so a normal manual launch is completely unaffected.
+- A separate `mcp-server/` Node package is the actual MCP stdio server your AI client talks to. It either attaches to a Framewright instance you already have running, or launches one itself.
+- Every MCP tool call goes through the exact same internal code paths the UI itself uses — there's no parallel "AI mode" implementation to trust separately from what you'd click through by hand.
+- Binds to `127.0.0.1` only, random port and token per launch, never reachable over the network.
+
+See [`mcp-server/README.md`](mcp-server/README.md) for the full tool catalog, architecture, and security model, and the [Roadmap](#roadmap) below for what's built vs. still in progress (export control is the biggest current gap).
 
 ---
 
@@ -331,12 +363,6 @@ Framewright combines a platform-specific capture layer with a renderer-driven ed
 
 **Projects**
 - `.framewright` files store the source media path plus editor state so work can be reopened later; legacy `.recordly` files remain fully readable
-
----
-
-# AI / MCP Control
-
-Framewright ships an optional [MCP](https://modelcontextprotocol.io) server (`mcp-server/`) that lets an AI harness like Claude drive recording, editor state, and captions end-to-end. See [`mcp-server/README.md`](mcp-server/README.md) for the tool catalog, architecture, and security model. It's entirely opt-in — a normal manual launch is unaffected.
 
 ---
 
