@@ -340,6 +340,32 @@ Framewright ships an optional [MCP](https://modelcontextprotocol.io) server (`mc
 
 ---
 
+# Roadmap
+
+**Shipped**
+
+- Full app rebrand from Recordly to Framewright (identity, theme, docs, icons, extension system, settings migration)
+- MCP automation layer: 18 tools covering the recording lifecycle, editor bridge (zoom, trim, frame style, webcam overlay, annotations), and caption generation/editing
+- Live-verified on macOS, with a full test suite (1000+ tests) and CI (typecheck, lint, tests) green on every push
+
+**Not built yet**
+
+- **Export control via MCP.** There's no `export_video` tool. Export's IPC handlers stream progress via `event.sender`, which the automation server's current registry-dispatch approach can't handle — this needs its own design (likely the editor-bridge pattern, since export also runs client-side). This is the largest remaining gap if the goal is "control every feature via MCP."
+- **A standalone speed/clip-speed MCP tool.** Speed is derived from clip data with a more complex overlap-blocking contract than a simple add/set call — needs its own design.
+- **`download_whisper_model`/`delete_whisper_model` MCP tools.** Same `event.sender` progress-streaming shape problem as export.
+
+**Known gaps / needs verification**
+
+- **Windows and Linux are unverified for the whole MCP layer.** Only macOS has ever been live-tested, despite the code branching on all three platforms.
+- **`generate_captions`'s real Whisper transcription path has never been live-tested end-to-end**, and the MCP client's flat 15-second RPC timeout has not been confirmed safe for a real (potentially multi-minute) transcription.
+- **The real MCP protocol transport has never been exercised by an actual client** (e.g. Claude Desktop/Code) — all verification so far calls the underlying connection/tool-handler code directly, bypassing the stdio transport and zod schema validation a real client would go through.
+- No WebSocket close-handler on the MCP client — if Framewright quits mid-call, the caller waits out the full timeout instead of failing fast.
+- No tagged release has been cut yet, so the Homebrew/WinGet release-automation workflows are fixed but untested end-to-end.
+
+See [`mcp-server/README.md`](mcp-server/README.md#known-limitations) for the MCP-specific limitations in more detail.
+
+---
+
 # Contribution
 
 Contributions are welcome.
