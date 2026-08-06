@@ -206,7 +206,9 @@ async function main() {
 	} finally {
 		client.close();
 		for (const path of recordedPaths) {
-			await fs.rm(path, { force: true }).catch(() => {});
+			await fs.rm(path, { force: true }).catch(() => {
+				// Best-effort cleanup — ignore errors (e.g. file already removed).
+			});
 		}
 	}
 }

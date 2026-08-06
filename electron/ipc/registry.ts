@@ -1,5 +1,6 @@
 import { ipcMain } from "electron";
 
+// biome-ignore lint/suspicious/noExplicitAny: heterogeneous registry of IPC handlers with unrelated signatures; a narrower type would break every real handler's assignability to this map.
 export type IpcHandlerFn = (event: Electron.IpcMainInvokeEvent, ...args: any[]) => any;
 
 export const ipcHandlerRegistry = new Map<string, IpcHandlerFn>();
