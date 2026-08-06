@@ -65,7 +65,7 @@ That's the workflow this is built for — an agent doing the recording-to-polish
 - Every MCP tool call goes through the exact same internal code paths the UI itself uses — there's no parallel "AI mode" implementation to trust separately from what you'd click through by hand.
 - Binds to `127.0.0.1` only, random port and token per launch, never reachable over the network.
 
-See [`mcp-server/README.md`](mcp-server/README.md) for the full tool catalog, architecture, and security model, and the [Roadmap](#roadmap) below for what's built vs. still in progress (export control is the biggest current gap).
+See [`mcp-server/README.md`](mcp-server/README.md) for setup steps (Claude Code, Claude Desktop, Codex CLI, or any other MCP client), the full tool catalog, architecture, and security model, and the [Roadmap](#roadmap) below for what's built vs. still in progress (export control is the biggest current gap).
 
 ---
 

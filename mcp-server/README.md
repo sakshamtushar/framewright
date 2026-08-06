@@ -12,12 +12,79 @@ See the root repo's `docs/superpowers/plans/2026-07-19-recordly-mcp-phase*.md` f
 ## Quick start
 
 ```bash
+git clone https://github.com/sakshamtushar/framewright.git
+cd framewright/mcp-server
 npm install
 npm run build
-npm start   # runs dist/index.js as an MCP stdio server
 ```
 
-Point an MCP client (Claude Code, Claude Desktop, or the [MCP inspector](https://github.com/modelcontextprotocol/inspector)) at `node <path-to-this-repo>/mcp-server/dist/index.js`. On first tool call it will either attach to a Framewright instance you already have running, or launch one itself.
+This produces `dist/index.js`, an MCP stdio server. Note its **absolute path** — every client below needs it. No environment variables or manual token setup required: the server generates a random per-launch token itself and either attaches to a Framewright instance you already have running (via a lockfile), or launches one from the parent repo checkout for you.
+
+### Claude Code
+
+```bash
+claude mcp add framewright -- node /absolute/path/to/framewright/mcp-server/dist/index.js
+```
+
+Or add it as a project-scoped `.mcp.json` (checked into a repo, shared with collaborators) instead of a user-level registration:
+
+```json
+{
+  "mcpServers": {
+    "framewright": {
+      "command": "node",
+      "args": ["/absolute/path/to/framewright/mcp-server/dist/index.js"]
+    }
+  }
+}
+```
+
+Restart Claude Code (or start a new session) after adding a new server — an already-running session won't pick it up.
+
+### Claude Desktop
+
+Edit your config file — macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`; Windows: `%APPDATA%\Claude\claude_desktop_config.json` — and add:
+
+```json
+{
+  "mcpServers": {
+    "framewright": {
+      "command": "node",
+      "args": ["/absolute/path/to/framewright/mcp-server/dist/index.js"]
+    }
+  }
+}
+```
+
+Fully quit and reopen Claude Desktop for it to pick up the change.
+
+### Codex CLI
+
+Add to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.framewright]
+command = "node"
+args = ["/absolute/path/to/framewright/mcp-server/dist/index.js"]
+```
+
+### Any other MCP-compatible client
+
+Any client that can launch a stdio MCP server works the same way — point it at:
+
+```
+node /absolute/path/to/framewright/mcp-server/dist/index.js
+```
+
+The [MCP Inspector](https://github.com/modelcontextprotocol/inspector) is useful for testing the tool catalog directly without a full AI client:
+
+```bash
+npx @modelcontextprotocol/inspector node /absolute/path/to/framewright/mcp-server/dist/index.js
+```
+
+### Verifying it's connected
+
+Ask your client to call `get_app_status` (or run it directly via the Inspector). On first call it will either attach to a Framewright instance you already have running, or spawn one (`npm run dev` in the parent repo) — the first spawn can take up to a minute while the dev build starts.
 
 ## Live verification
 
