@@ -9,15 +9,15 @@ Language: EN | [简中](README.zh-CN.md)
   <img src="https://img.shields.io/badge/open%20source-AGPL3.0-e5af89?style=for-the-badge" alt="AGPL 3.0 license" />
 </p>
 
-### The screen recorder an AI agent can actually drive
-[Framewright](https://www.framewright.dev) is an **open-source, AI-native screen recorder and editor**. Starting and stopping a recording, adding zooms, trimming clips, styling the frame, overlaying a webcam, generating and editing captions: each of these is exposed as an [MCP](https://modelcontextprotocol.io) tool, so an AI harness like Claude can drive the whole pipeline end to end. Point it at Framewright and ask for a polished demo video, and it can record, edit, and produce one without you touching the timeline.
+### The screen recorder an AI agent can drive
+[Framewright](https://www.framewright.dev) is an **open-source, AI-native screen recorder and editor**. Starting and stopping a recording, adding zooms, trimming clips, styling the frame, overlaying a webcam, generating and editing captions: each of these is exposed as an [MCP](https://modelcontextprotocol.io) tool, so an AI harness like Claude can drive the pipeline end to end. Point it at Framewright and ask for a polished demo video, and it can record, edit, and produce one without you touching the timeline.
 **Accepting PRs.**
 
 <img width="1280" height="720" alt="MP4 to GIF export (4)" src="https://github.com/user-attachments/assets/e6d68606-5fc0-4f70-99cd-7521982dc13b" />
 
 ## Why Framewright?
 
-Plenty of screen recorders can add a zoom or a webcam bubble. In Framewright, none of that only lives behind a mouse click. It's reachable through a real, local MCP server:
+Plenty of screen recorders can add a zoom or a webcam bubble. In Framewright, none of that only lives behind a mouse click. It's reachable through a local MCP server:
 
 - **A full MCP control surface, not a demo integration.** 18 tools today: recording lifecycle, zoom/trim/frame-style/webcam/annotation editing, caption generation and editing. Export control is next on the roadmap. See [`mcp-server/README.md`](mcp-server/README.md) for the full catalog.
 - **Local, opt-in, and auditable.** The automation server only starts when you explicitly set a token env var. It binds to `127.0.0.1` only, and every tool call goes through the same code path the UI itself uses, so there's no separate "AI mode" logic to trust.
@@ -60,7 +60,7 @@ That's the workflow this is built for: an agent running the recording-to-polishe
 
 **How it works, briefly:**
 
-A localhost-only WebSocket JSON-RPC server runs inside Framewright's Electron main process. It only starts when you explicitly set `FRAMEWRIGHT_MCP_TOKEN`, so a normal manual launch is unaffected. A separate `mcp-server/` Node package is the actual MCP stdio server your AI client talks to; it either attaches to a Framewright instance you already have running or launches one itself. Every MCP tool call goes through the same internal code paths the UI uses, so there's no parallel "AI mode" implementation to trust on its own. The server binds to `127.0.0.1` only, with a random port and token per launch, and is never reachable over the network.
+A localhost-only WebSocket JSON-RPC server runs inside Framewright's Electron main process. It only starts when you explicitly set `FRAMEWRIGHT_MCP_TOKEN`, so a normal manual launch is unaffected. A separate `mcp-server/` Node package is the MCP stdio server your AI client talks to; it either attaches to a Framewright instance you already have running or launches one itself. Every MCP tool call goes through the same internal code paths the UI uses, so there's no parallel "AI mode" implementation to trust on its own. The server binds to `127.0.0.1` only, with a random port and token per launch, and is never reachable over the network.
 
 See [`mcp-server/README.md`](mcp-server/README.md) for setup steps (Claude Code, Claude Desktop, Codex CLI, or any other MCP client), the full tool catalog, architecture, and security model, and the [Roadmap](#roadmap) below for what's built versus still in progress. Export control is the biggest current gap.
 
@@ -380,8 +380,8 @@ Framewright combines a platform-specific capture layer with a renderer-driven ed
 **Known gaps and things that need verification**
 
 - **Windows and Linux are unverified for the whole MCP layer.** Only macOS has ever been live-tested, despite the code branching on all three platforms.
-- **`generate_captions`'s real Whisper transcription path has never been live-tested end to end**, and the MCP client's flat 15-second RPC timeout has not been confirmed safe for a real, potentially multi-minute, transcription.
-- **The real MCP protocol transport has never been exercised by an actual client** such as Claude Desktop or Claude Code. All verification so far calls the underlying connection/tool-handler code directly, bypassing the stdio transport and zod schema validation a real client would go through.
+- **`generate_captions`'s Whisper transcription path has never been live-tested end to end**, and the MCP client's flat 15-second RPC timeout has not been confirmed safe for a potentially multi-minute transcription.
+- **The MCP protocol transport has never been exercised by a real client** such as Claude Desktop or Claude Code. All verification so far calls the underlying connection/tool-handler code directly, bypassing the stdio transport and zod schema validation a client would go through.
 - No WebSocket close-handler on the MCP client. If Framewright quits mid-call, the caller waits out the full timeout instead of failing fast.
 - No tagged release has been cut yet, so the Homebrew/WinGet release-automation workflows are fixed but untested end to end.
 
