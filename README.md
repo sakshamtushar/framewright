@@ -10,17 +10,17 @@ Language: EN | [简中](README.zh-CN.md)
 </p>
 
 ### The screen recorder an AI agent can actually drive
-[Framewright](https://www.framewright.dev) is an **open-source, AI-native screen recorder and editor**. Every part of the workflow — start/stop a recording, add zooms, trim clips, style the frame, overlay a webcam, generate and edit captions — is exposed as an [MCP](https://modelcontextprotocol.io) tool, so an AI harness like Claude can drive the entire pipeline end to end. Point it at Framewright and ask for a polished demo video; it can record, edit, and produce one without you touching the timeline.
+[Framewright](https://www.framewright.dev) is an **open-source, AI-native screen recorder and editor**. Starting and stopping a recording, adding zooms, trimming clips, styling the frame, overlaying a webcam, generating and editing captions: each of these is exposed as an [MCP](https://modelcontextprotocol.io) tool, so an AI harness like Claude can drive the whole pipeline end to end. Point it at Framewright and ask for a polished demo video, and it can record, edit, and produce one without you touching the timeline.
 **Accepting PRs.**
 
 <img width="1280" height="720" alt="MP4 to GIF export (4)" src="https://github.com/user-attachments/assets/e6d68606-5fc0-4f70-99cd-7521982dc13b" />
 
 ## Why Framewright?
 
-Plenty of screen recorders can add a zoom or a webcam bubble. Framewright's difference is that **none of that lives only behind a mouse click** — it's all reachable through a real, local MCP server:
+Plenty of screen recorders can add a zoom or a webcam bubble. In Framewright, none of that only lives behind a mouse click. It's reachable through a real, local MCP server:
 
-- **A full MCP control surface, not a demo integration.** 18 tools today (recording lifecycle, zoom/trim/frame-style/webcam/annotation editing, caption generation and editing), with export control next on the roadmap. See [`mcp-server/README.md`](mcp-server/README.md) for the full catalog.
-- **Local, opt-in, and auditable.** The automation server only starts when you explicitly set a token env var, binds to `127.0.0.1` only, and every tool call goes through the exact same code path the UI itself uses — no separate "AI mode" logic to trust.
+- **A full MCP control surface, not a demo integration.** 18 tools today: recording lifecycle, zoom/trim/frame-style/webcam/annotation editing, caption generation and editing. Export control is next on the roadmap. See [`mcp-server/README.md`](mcp-server/README.md) for the full catalog.
+- **Local, opt-in, and auditable.** The automation server only starts when you explicitly set a token env var. It binds to `127.0.0.1` only, and every tool call goes through the same code path the UI itself uses, so there's no separate "AI mode" logic to trust.
 - **Still a complete editor by hand.** Everything the MCP layer can do, you can also do yourself: auto-zoom suggestions, cursor polish, styled frames, timeline editing, webcam overlays, MP4/GIF export.
 
 Jump to [AI / MCP Control](#ai--mcp-control) for how to connect an agent, or keep reading for the full feature set.
@@ -29,7 +29,7 @@ Jump to [AI / MCP Control](#ai--mcp-control) for how to connect an agent, or kee
 
 ## What is Framewright?
 
-Framewright is a desktop app for recording and editing screen captures, built so the entire workflow — capture, zoom, cursor polish, frame styling, captions, export — can be driven either by hand in the editor or programmatically by an AI agent through MCP. No motion designer, no manual timeline work required for either path.
+Framewright is a desktop app for recording and editing screen captures. The whole workflow (capture, zoom, cursor polish, frame styling, captions, export) can be driven either by hand in the editor or programmatically by an AI agent through MCP. Neither path needs a motion designer or manual timeline work.
 
 Framewright runs on:
 
@@ -47,25 +47,22 @@ Platform notes:
 
 # AI / MCP Control
 
-This is the reason Framewright exists as its own project rather than just being Recordly with a new coat of paint.
+This is why Framewright is its own project instead of just Recordly under a new name.
 
-Framewright ships a built-in [MCP](https://modelcontextprotocol.io) server (`mcp-server/`) that lets an AI harness — Claude, or any MCP-compatible client — drive the app the same way a person would: pick a source, start recording, pause/resume/stop, jump into the editor, add zoom regions, trim clips, style the frame, position a webcam overlay, drop in annotations, generate captions from the recording's audio, and edit them. 18 tools today, with export control next on the roadmap.
+Framewright ships a built-in [MCP](https://modelcontextprotocol.io) server (`mcp-server/`) that lets an AI harness, Claude or any MCP-compatible client, drive the app the same way a person would: pick a source, start recording, pause, resume, stop, jump into the editor, add zoom regions, trim clips, style the frame, position a webcam overlay, drop in annotations, generate captions from the recording's audio, and edit them. 18 tools today, with export control next on the roadmap.
 
 ```
 "Record my screen for the next demo, then add a zoom on the button click, add a
 subtle webcam bubble in the corner, generate captions, and export it."
 ```
 
-That's the workflow this is built for — an agent doing the recording-to-polished-video pipeline, not just triggering a single "record" button.
+That's the workflow this is built for: an agent running the recording-to-polished-video pipeline, not just triggering a single "record" button.
 
 **How it works, briefly:**
 
-- A localhost-only WebSocket JSON-RPC server runs inside Framewright's Electron main process — it only starts when you explicitly set `FRAMEWRIGHT_MCP_TOKEN`, so a normal manual launch is completely unaffected.
-- A separate `mcp-server/` Node package is the actual MCP stdio server your AI client talks to. It either attaches to a Framewright instance you already have running, or launches one itself.
-- Every MCP tool call goes through the exact same internal code paths the UI itself uses — there's no parallel "AI mode" implementation to trust separately from what you'd click through by hand.
-- Binds to `127.0.0.1` only, random port and token per launch, never reachable over the network.
+A localhost-only WebSocket JSON-RPC server runs inside Framewright's Electron main process. It only starts when you explicitly set `FRAMEWRIGHT_MCP_TOKEN`, so a normal manual launch is unaffected. A separate `mcp-server/` Node package is the actual MCP stdio server your AI client talks to; it either attaches to a Framewright instance you already have running or launches one itself. Every MCP tool call goes through the same internal code paths the UI uses, so there's no parallel "AI mode" implementation to trust on its own. The server binds to `127.0.0.1` only, with a random port and token per launch, and is never reachable over the network.
 
-See [`mcp-server/README.md`](mcp-server/README.md) for setup steps (Claude Code, Claude Desktop, Codex CLI, or any other MCP client), the full tool catalog, architecture, and security model, and the [Roadmap](#roadmap) below for what's built vs. still in progress (export control is the biggest current gap).
+See [`mcp-server/README.md`](mcp-server/README.md) for setup steps (Claude Code, Claude Desktop, Codex CLI, or any other MCP client), the full tool catalog, architecture, and security model, and the [Roadmap](#roadmap) below for what's built versus still in progress. Export control is the biggest current gap.
 
 ---
 
@@ -94,7 +91,7 @@ Use drag-and-drop timeline tools for zooms, trims, speed regions, annotations, e
 
 ## Extensions & Marketplace
 
-Framewright has a community-driven extension system. Anyone can build and publish extensions that add new capabilities to Framewright — cursor click sounds, device frames, browser mockups, wallpapers, render hooks, settings panels, and more.
+Framewright has a community-driven extension system. Anyone can build and publish extensions that add new capabilities: cursor click sounds, device frames, browser mockups, wallpapers, render hooks, settings panels, and more.
 
 Browse and install community extensions from the [Framewright Marketplace](https://marketplace.framewright.dev/extensions).
 
@@ -182,7 +179,7 @@ Browse and install community extensions from the [Framewright Marketplace](https
 # Screenshots
 
 > [!NOTE]
-> The screenshots below are inherited from the original Recordly project and still show its blue theme — updated Framewright screenshots are pending.
+> The screenshots below are inherited from the original Recordly project and still show its blue theme. Updated Framewright screenshots are pending.
 
 <p align="center">
   <img src="https://i.postimg.cc/8CrQtGJf/Screenshot-2026-04-30-at-5-11-52-pm.png" width="700" alt="Framewright recording interface screenshot">
@@ -210,7 +207,7 @@ https://github.com/sakshamtushar/framewright/releases
 
 ## Arch Linux / Manjaro
 
-Arch packaging (AUR) hasn't been set up for Framewright yet — the original Recordly project's AUR package (`recordly-bin`) is maintained in a separate repo and does not track this fork. Use [Build from source](#build-from-source) below in the meantime, or open an issue if you'd like to help set up a Framewright AUR package.
+Arch packaging (AUR) hasn't been set up for Framewright yet. The original Recordly project's AUR package (`recordly-bin`) is maintained in a separate repo and does not track this fork. Use [Build from source](#build-from-source) below in the meantime, or open an issue if you'd like to help set up a Framewright AUR package.
 
 ---
 
@@ -362,7 +359,7 @@ Framewright combines a platform-specific capture layer with a renderer-driven ed
 - The same scene logic used in preview is rendered into exported MP4 or GIF output
 
 **Projects**
-- `.framewright` files store the source media path plus editor state so work can be reopened later; legacy `.recordly` files remain fully readable
+- `.framewright` files store the source media path plus editor state so work can be reopened later. Legacy `.recordly` files remain fully readable.
 
 ---
 
@@ -376,17 +373,17 @@ Framewright combines a platform-specific capture layer with a renderer-driven ed
 
 **Not built yet**
 
-- **Export control via MCP.** There's no `export_video` tool. Export's IPC handlers stream progress via `event.sender`, which the automation server's current registry-dispatch approach can't handle — this needs its own design (likely the editor-bridge pattern, since export also runs client-side). This is the largest remaining gap if the goal is "control every feature via MCP."
-- **A standalone speed/clip-speed MCP tool.** Speed is derived from clip data with a more complex overlap-blocking contract than a simple add/set call — needs its own design.
+- **Export control via MCP.** There's no `export_video` tool. Export's IPC handlers stream progress via `event.sender`, which the automation server's current registry-dispatch approach can't handle. This needs its own design, likely the editor-bridge pattern, since export also runs client-side. It's the largest remaining gap if the goal is control over every feature via MCP.
+- **A standalone speed/clip-speed MCP tool.** Speed is derived from clip data with a more complex overlap-blocking contract than a simple add/set call, so this needs its own design.
 - **`download_whisper_model`/`delete_whisper_model` MCP tools.** Same `event.sender` progress-streaming shape problem as export.
 
-**Known gaps / needs verification**
+**Known gaps and things that need verification**
 
 - **Windows and Linux are unverified for the whole MCP layer.** Only macOS has ever been live-tested, despite the code branching on all three platforms.
-- **`generate_captions`'s real Whisper transcription path has never been live-tested end-to-end**, and the MCP client's flat 15-second RPC timeout has not been confirmed safe for a real (potentially multi-minute) transcription.
-- **The real MCP protocol transport has never been exercised by an actual client** (e.g. Claude Desktop/Code) — all verification so far calls the underlying connection/tool-handler code directly, bypassing the stdio transport and zod schema validation a real client would go through.
-- No WebSocket close-handler on the MCP client — if Framewright quits mid-call, the caller waits out the full timeout instead of failing fast.
-- No tagged release has been cut yet, so the Homebrew/WinGet release-automation workflows are fixed but untested end-to-end.
+- **`generate_captions`'s real Whisper transcription path has never been live-tested end to end**, and the MCP client's flat 15-second RPC timeout has not been confirmed safe for a real, potentially multi-minute, transcription.
+- **The real MCP protocol transport has never been exercised by an actual client** such as Claude Desktop or Claude Code. All verification so far calls the underlying connection/tool-handler code directly, bypassing the stdio transport and zod schema validation a real client would go through.
+- No WebSocket close-handler on the MCP client. If Framewright quits mid-call, the caller waits out the full timeout instead of failing fast.
+- No tagged release has been cut yet, so the Homebrew/WinGet release-automation workflows are fixed but untested end to end.
 
 See [`mcp-server/README.md`](mcp-server/README.md#known-limitations) for the MCP-specific limitations in more detail.
 
@@ -432,6 +429,6 @@ Framewright is licensed under the **AGPL 3.0**. See [LICENSE.md](LICENSE.md) and
 
 Framewright is a fork of [Recordly](https://github.com/webadderallorg/Recordly) (by [@webadderall](https://x.com/webadderall)), rebranded and maintained independently under the AGPLv3's reciprocal-licensing terms. Recordly itself originally started as a fork of [OpenScreen](https://github.com/siddharthvaddem/openscreen); many of its core features, such as zoom animations, trace back to that lineage. See [NOTICE.md](NOTICE.md) for the full chain.
 
-Recordly's original supporters and community are acknowledged in [Recordly's own README](https://github.com/webadderallorg/Recordly#hall-of-supporters) — Framewright is a separate, independently maintained fork and does not claim their support for itself.
+Recordly's original supporters and community are acknowledged in [Recordly's own README](https://github.com/webadderallorg/Recordly#hall-of-supporters). Framewright is a separate, independently maintained fork and does not claim their support for itself.
 
 ---
