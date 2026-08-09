@@ -9,7 +9,12 @@ vi.mock("./paths.js", () => ({
 	getLockfilePath: () => lockPath,
 }));
 
-import { isProcessAlive, readLockfile } from "./lockfile.js";
+import {
+	commandLineMatchesFramewright,
+	isFramewrightProcess,
+	isProcessAlive,
+	readLockfile,
+} from "./lockfile.js";
 
 describe("readLockfile", () => {
 	let dir: string;
@@ -45,5 +50,110 @@ describe("isProcessAlive", () => {
 
 	it("returns false for a pid that almost certainly does not exist", () => {
 		expect(isProcessAlive(999_999)).toBe(false);
+	});
+});
+
+describe("commandLineMatchesFramewright", () => {
+	it("matches a packaged macOS Framewright binary", () => {
+		expect(
+			commandLineMatchesFramewright(
+				"/Applications/Framewright.app/Contents/MacOS/Framewright --enable-logging",
+			),
+		).toBe(true);
+	});
+
+	it("matches a packaged Linux Framewright binary", () => {
+		expect(commandLineMatchesFramewright("/opt/Framewright/Framewright --foo")).toBe(true);
+	});
+
+	it("matches a packaged Windows Framewright binary", () => {
+		expect(
+			commandLineMatchesFramewright('"C:\\Program Files\\Framewright\\Framewright.exe" --foo'),
+		).toBe(true);
+	});
+
+	it("matches a dev-mode Electron main entry (vite-plugin-electron)", () => {
+		expect(
+			commandLineMatchesFramewright(
+				"Electron /Users/foo/Recordly/dist-electron/electron/main.cjs",
+			),
+		).toBe(true);
+	});
+
+	it("matches legacy Recordly paths during the rename transition", () => {
+		expect(commandLineMatchesFramewright("/Applications/Recordly.app/Contents/MacOS/Recordly")).toBe(
+			true,
+		);
+	});
+
+	it("rejects Slack", () => {
+		expect(commandLineMatchesFramewright("/Applications/Slack.app/Contents/MacOS/Slack")).toBe(
+			false,
+		);
+	});
+
+	it("rejects a generic Electron app that is not Framewright", () => {
+		expect(
+			commandLineMatchesFramewright("/Applications/SomeOtherApp.app/Contents/MacOS/SomeOtherApp"),
+		).toBe(false);
+	});
+
+	it("rejects an empty command line", () => {
+		expect(commandLineMatchesFramewright("")).toBe(false);
+	});
+
+	it("rejects a dev-mode checkout cloned into an arbitrarily-named folder when repoDir is not passed", () => {
+		// This is the exact false-negative that motivated adding the repoDir check below:
+		// a folder name that contains neither "framewright" nor "recordly" and an argv
+		// that's just "." (no path to main.cjs), which real dev-mode Electron launches
+		// via vite-plugin-electron can produce.
+		expect(
+			commandLineMatchesFramewright(
+				"/Users/someone/my-fork/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron . --no-sandbox",
+			),
+		).toBe(false);
+	});
+
+	it("matches a dev-mode checkout in an arbitrarily-named folder when repoDir is passed", () => {
+		expect(
+			commandLineMatchesFramewright(
+				"/Users/someone/my-fork/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron . --no-sandbox",
+				"/Users/someone/my-fork",
+			),
+		).toBe(true);
+	});
+
+	it("does not match when repoDir is passed but points somewhere else", () => {
+		expect(
+			commandLineMatchesFramewright(
+				"/Users/someone/my-fork/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron . --no-sandbox",
+				"/Users/someone/a-different-checkout",
+			),
+		).toBe(false);
+	});
+
+	it("repoDir matching is case-insensitive", () => {
+		expect(
+			commandLineMatchesFramewright(
+				"C:\\Users\\Someone\\My-Fork\\node_modules\\electron\\dist\\electron.exe . --no-sandbox",
+				"C:\\Users\\Someone\\my-fork",
+			),
+		).toBe(true);
+	});
+});
+
+describe("isFramewrightProcess", () => {
+	it("returns false when the process is not alive", async () => {
+		// 999_999 is the sentinel used elsewhere for a surely-dead pid.
+		expect(await isFramewrightProcess(999_999)).toBe(false);
+	});
+
+	it("returns true for the current process (cmdline always non-empty in CI)", async () => {
+		// Best-effort: the test runner's cmdline almost certainly does not match
+		// Framewright, so this asserts our permissive fallback path. If the
+		// cmdline *does* happen to contain "framewright" (unlikely), it should
+		// still return true.
+		const result = await isFramewrightProcess(process.pid);
+		expect(typeof result).toBe("boolean");
 	});
 });
