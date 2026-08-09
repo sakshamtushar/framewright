@@ -21,11 +21,12 @@ async function delay(ms: number): Promise<void> {
 async function waitForLockfile(
 	timeoutMs: number,
 	pollIntervalMs: number,
+	repoDir: string,
 ): Promise<{ port: number; token: string } | null> {
 	const deadline = Date.now() + timeoutMs;
 	while (Date.now() < deadline) {
 		const lockfile = await readLockfile();
-		if (lockfile && (await isFramewrightProcess(lockfile.pid))) {
+		if (lockfile && (await isFramewrightProcess(lockfile.pid, repoDir))) {
 			return { port: lockfile.port, token: lockfile.token };
 		}
 		await delay(pollIntervalMs);
@@ -48,7 +49,7 @@ async function spawnAppAndWait(
 		stdio: "ignore",
 	}).unref();
 
-	const lockfile = await waitForLockfile(timeoutMs, pollIntervalMs);
+	const lockfile = await waitForLockfile(timeoutMs, pollIntervalMs, repoDir);
 	if (!lockfile) {
 		// Keep the debounce set so a tight retry loop can't keep spawning.
 		throw new Error(
@@ -64,10 +65,11 @@ async function spawnAppAndWait(
 async function waitForInFlightSpawn(
 	timeoutMs: number,
 	pollIntervalMs: number,
+	repoDir: string,
 ): Promise<RpcClient> {
 	// We're inside the debounce window. Don't spawn again — just wait for the
 	// already-in-flight `npm run dev` (or whatever lockfile shows up) to be live.
-	const lockfile = await waitForLockfile(timeoutMs, pollIntervalMs);
+	const lockfile = await waitForLockfile(timeoutMs, pollIntervalMs, repoDir);
 	if (!lockfile) {
 		throw new Error(
 			"Timed out waiting for Framewright to start. Check that `npm run dev` succeeds in the Framewright repo.",
@@ -86,7 +88,7 @@ export async function getOrCreateConnection(options: {
 	const pollIntervalMs = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
 
 	const existing = await readLockfile();
-	if (existing && (await isFramewrightProcess(existing.pid))) {
+	if (existing && (await isFramewrightProcess(existing.pid, options.repoDir))) {
 		// App is already up. Clear any stale debounce state.
 		lastSpawnTimestamp = 0;
 		return new RpcClient(existing.port, existing.token);
@@ -96,7 +98,7 @@ export async function getOrCreateConnection(options: {
 		lastSpawnTimestamp > 0 && Date.now() - lastSpawnTimestamp < SPAWN_DEBOUNCE_MS;
 
 	if (withinDebounce) {
-		return waitForInFlightSpawn(timeoutMs, pollIntervalMs);
+		return waitForInFlightSpawn(timeoutMs, pollIntervalMs, options.repoDir);
 	}
 
 	return spawnAppAndWait(options.repoDir, timeoutMs, pollIntervalMs);

@@ -45,17 +45,27 @@ export function isProcessAlive(pid: number): boolean {
  * Electron main process. Used by `isFramewrightProcess` and exported for unit testing.
  *
  * Matches:
- *   - Packaged binary paths containing "Framewright" / "framewright"
- *   - Legacy packaged binary paths containing "Recordly" / "recordly"
- *   - Dev mode: `vite-plugin-electron` spawns Electron with the main entry as an
- *     argument, so the command line contains the path to `electron/main` (e.g.
+ *   - Packaged binary paths containing "Framewright" / "framewright" (electron-builder
+ *     controls this naming via productName, so it's reliable regardless of where the
+ *     app is installed)
+ *   - Legacy packaged binary paths containing "Recordly" / "recordly", for the rename
+ *     transition period
+ *   - Dev mode, keyed off the actual repo directory being controlled (`repoDir`), not
+ *     a name guess: `npm run dev` resolves the `electron` binary from
+ *     `<repoDir>/node_modules/electron/...`, so the command line always contains the
+ *     repo's own path regardless of what the checkout folder is named. This is the
+ *     precise check; the "electron/main" substring below is a looser fallback for
+ *     when `repoDir` isn't available to compare against.
+ *   - Dev mode fallback: `vite-plugin-electron` spawns Electron with the main entry as
+ *     an argument, so the command line can contain the path to `electron/main` (e.g.
  *     `dist-electron/electron/main.cjs`).
  */
-export function commandLineMatchesFramewright(cmdline: string): boolean {
+export function commandLineMatchesFramewright(cmdline: string, repoDir?: string): boolean {
 	if (!cmdline) return false;
 	const lower = cmdline.toLowerCase();
 	if (lower.includes("framewright")) return true;
 	if (lower.includes("recordly")) return true;
+	if (repoDir && lower.includes(repoDir.toLowerCase())) return true;
 	if (lower.includes("electron/main")) return true;
 	if (lower.includes("electron-main")) return true;
 	return false;
@@ -66,8 +76,12 @@ export function commandLineMatchesFramewright(cmdline: string): boolean {
  * not just any process occupying that PID slot (which can happen after PID reuse
  * once the original Framewright instance has died). On any platform-specific
  * lookup failure we fall back to `isProcessAlive` so we don't regress behavior.
+ *
+ * Pass `repoDir` (the checkout `getOrCreateConnection` would spawn `npm run dev`
+ * from) so dev-mode instances are recognized correctly no matter what the checkout
+ * folder is named — see `commandLineMatchesFramewright`.
  */
-export async function isFramewrightProcess(pid: number): Promise<boolean> {
+export async function isFramewrightProcess(pid: number, repoDir?: string): Promise<boolean> {
 	if (!isProcessAlive(pid)) return false;
 
 	let cmdline: string | null = null;
@@ -79,7 +93,7 @@ export async function isFramewrightProcess(pid: number): Promise<boolean> {
 	}
 
 	if (cmdline === null) return true;
-	return commandLineMatchesFramewright(cmdline);
+	return commandLineMatchesFramewright(cmdline, repoDir);
 }
 
 async function getProcessCommandLine(pid: number): Promise<string | null> {

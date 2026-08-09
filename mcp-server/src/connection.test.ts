@@ -5,7 +5,7 @@ const mockIsFramewrightProcess = vi.fn();
 
 vi.mock("./lockfile.js", () => ({
 	readLockfile: () => mockReadLockfile(),
-	isFramewrightProcess: (pid: number) => mockIsFramewrightProcess(pid),
+	isFramewrightProcess: (pid: number, repoDir?: string) => mockIsFramewrightProcess(pid, repoDir),
 }));
 
 vi.mock("./rpcClient.js", () => ({
@@ -67,6 +67,42 @@ describe("getOrCreateConnection", () => {
 		expect(RpcClient).toHaveBeenCalledWith(5000, "tok");
 		expect(client).toEqual({ port: 5000, token: "tok" });
 		expect(mockSpawn).not.toHaveBeenCalled();
+	});
+
+	it("passes repoDir through to isFramewrightProcess on the attach path", async () => {
+		mockSpawn.mockClear();
+		mockReadLockfile.mockReset();
+		mockIsFramewrightProcess.mockReset();
+
+		mockReadLockfile.mockResolvedValue({ pid: 999, port: 5001, token: "tok-repo" });
+		mockIsFramewrightProcess.mockResolvedValue(true);
+
+		await getOrCreateConnection({
+			repoDir: "/Users/someone/my-fork",
+			pollIntervalMs: FAST_POLL_MS,
+			spawnTimeoutMs: SHORT_TIMEOUT_MS,
+		});
+
+		expect(mockIsFramewrightProcess).toHaveBeenCalledWith(999, "/Users/someone/my-fork");
+	});
+
+	it("passes repoDir through to isFramewrightProcess while polling after a spawn", async () => {
+		mockSpawn.mockClear();
+		mockReadLockfile.mockReset();
+		mockIsFramewrightProcess.mockReset();
+
+		setupMocks(
+			[null, { pid: 1000, port: 5002, token: "tok-repo2" }],
+			[false, true],
+		);
+
+		await getOrCreateConnection({
+			repoDir: "/Users/someone/my-fork",
+			spawnTimeoutMs: SHORT_TIMEOUT_MS,
+			pollIntervalMs: FAST_POLL_MS,
+		});
+
+		expect(mockIsFramewrightProcess).toHaveBeenCalledWith(1000, "/Users/someone/my-fork");
 	});
 
 	it("spawns npm run dev when no live lockfile exists and no debounce is active", async () => {

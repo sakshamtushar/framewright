@@ -101,6 +101,45 @@ describe("commandLineMatchesFramewright", () => {
 	it("rejects an empty command line", () => {
 		expect(commandLineMatchesFramewright("")).toBe(false);
 	});
+
+	it("rejects a dev-mode checkout cloned into an arbitrarily-named folder when repoDir is not passed", () => {
+		// This is the exact false-negative that motivated adding the repoDir check below:
+		// a folder name that contains neither "framewright" nor "recordly" and an argv
+		// that's just "." (no path to main.cjs), which real dev-mode Electron launches
+		// via vite-plugin-electron can produce.
+		expect(
+			commandLineMatchesFramewright(
+				"/Users/someone/my-fork/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron . --no-sandbox",
+			),
+		).toBe(false);
+	});
+
+	it("matches a dev-mode checkout in an arbitrarily-named folder when repoDir is passed", () => {
+		expect(
+			commandLineMatchesFramewright(
+				"/Users/someone/my-fork/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron . --no-sandbox",
+				"/Users/someone/my-fork",
+			),
+		).toBe(true);
+	});
+
+	it("does not match when repoDir is passed but points somewhere else", () => {
+		expect(
+			commandLineMatchesFramewright(
+				"/Users/someone/my-fork/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron . --no-sandbox",
+				"/Users/someone/a-different-checkout",
+			),
+		).toBe(false);
+	});
+
+	it("repoDir matching is case-insensitive", () => {
+		expect(
+			commandLineMatchesFramewright(
+				"C:\\Users\\Someone\\My-Fork\\node_modules\\electron\\dist\\electron.exe . --no-sandbox",
+				"C:\\Users\\Someone\\my-fork",
+			),
+		).toBe(true);
+	});
 });
 
 describe("isFramewrightProcess", () => {
