@@ -142,7 +142,9 @@ process.env.APP_ROOT = path.join(electronMainDir, "..");
 export const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 export const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-const IS_DEV = Boolean(VITE_DEV_SERVER_URL);
+// IS_DEV is intentionally not retained: we now always enforce the single-instance
+// lock so MCP-spawned dev launches collapse into the existing instance instead of
+// running in parallel. See `shouldEnforceSingleInstanceLock` below.
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
 	? path.join(process.env.APP_ROOT, "public")
@@ -184,7 +186,11 @@ let isCreatingMainWindow = false;
 let isCreatingEditorWindow = false;
 let activeUpdateNotification: Notification | null = null;
 let activeUpdateNotificationKey: string | null = null;
-const shouldEnforceSingleInstanceLock = !IS_DEV;
+// Always enforce the single-instance lock, even in dev. This prevents the MCP server
+// (which auto-spawns "npm run dev") from launching a parallel copy of the app: the
+// second copy will fail to acquire the lock and quit, and the existing app will
+// focus itself via the "second-instance" handler below.
+const shouldEnforceSingleInstanceLock = true;
 const hasSingleInstanceLock = shouldEnforceSingleInstanceLock
 	? app.requestSingleInstanceLock()
 	: true;
