@@ -316,3 +316,37 @@ Whisper-model-missing error, `videoPath` defaulting) — same environment as abo
   reference unchanged).
 - The pre-existing "moov atom not found" flake reproduced again on `stop_recording` right after
   pause→resume — same known, unrelated native-layer issue as every prior run.
+
+## Fix: eager connection on process startup (auto-launch bug)
+
+**Date:** 2026-08-09
+**Reported as:** "Framewright randomly keeps triggering and appearing" — the app was launching the
+moment the repo was opened in an editor, with no tool ever called.
+
+**Root cause:** `index.ts`'s `main()` called `getOrCreateConnection()` synchronously before
+`server.connect(transport)`, so the MCP server process connected to (or spawned) Framewright the
+instant the process itself started — which happens whenever *any* MCP client does its startup
+handshake (an editor extension listing tools, `claude mcp list`, etc.), independent of whether a
+tool was ever actually invoked. The single-instance-lock/debounce/PID-verification fix from the
+prior session addressed correctness once a spawn happened, but not this: the unconditional spawn
+on mere process startup.
+
+**Fix:** `buildToolHandlers` now takes a `GetClient` function (`() => Promise<RpcClient>`) instead
+of a resolved client, and every handler calls it internally. `index.ts` builds a memoized lazy
+`getClient()` and only calls `getOrCreateConnection()` from inside a handler when a tool actually
+runs. `main()` registers tool schemas and connects the stdio transport immediately, without
+touching Framewright at all.
+
+**Live-verified** by spawning the real built `dist/index.js` as a subprocess and driving raw MCP
+protocol messages over stdio (not the smoke driver, which intentionally connects eagerly for its
+own purposes):
+
+1. `initialize` + `notifications/initialized` + `tools/list` (exactly what an editor/IDE client
+   does on startup) — confirmed **zero** Framewright/Electron processes spawned, checked via `ps`
+   both immediately after and on a delay.
+2. `tools/call` for `get_app_status` on the same running server — confirmed this **does** spawn
+   Framewright (`npm run dev` → real Electron process appeared in `ps`), and the call correctly
+   returned real data once the app was up: `{"recording":false,"platform":"darwin"}`.
+
+Also added unit tests in `tools.test.ts` proving `buildToolHandlers` never calls `getClient` just
+from being constructed, only when a handler is actually invoked.

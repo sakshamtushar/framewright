@@ -5,20 +5,35 @@ import type { RpcClient } from "./rpcClient.js";
 
 type ToolHandler = (args: Record<string, unknown>) => Promise<unknown>;
 
+/**
+ * Resolves the RpcClient on demand. Framewright is only launched (or attached to)
+ * the first time a tool handler actually runs `await getClient()` — never just
+ * because the MCP server process started. This matters because MCP clients (an
+ * editor extension, `claude mcp list`, etc.) commonly spawn every registered
+ * server's process eagerly to complete the protocol handshake, well before the
+ * user or an agent ever calls a tool. If connecting to Framewright happened at
+ * module load instead of inside a handler, merely having this server registered
+ * would launch Framewright every time an MCP client started up nearby.
+ */
+export type GetClient = () => Promise<RpcClient>;
+
 // Registry-routed RPC methods (e.g. "captions.generate") take one positional argument and
 // must be wrapped as `{ arg: ... }`; editor-bridge methods (e.g. "editor.*") take the params
 // object flat, with no wrapping. See electron/automation/server.ts's callChannel comment.
-export function buildToolHandlers(client: RpcClient): Record<string, ToolHandler> {
+export function buildToolHandlers(getClient: GetClient): Record<string, ToolHandler> {
 	return {
 		async get_app_status() {
+			const client = await getClient();
 			return client.call("app.status");
 		},
 
 		async list_capture_sources() {
+			const client = await getClient();
 			return client.call("sources.list", { arg: { types: ["screen", "window"] } });
 		},
 
 		async start_recording(args) {
+			const client = await getClient();
 			const source = {
 				id: args.sourceId,
 				sourceType: args.sourceType,
@@ -29,14 +44,17 @@ export function buildToolHandlers(client: RpcClient): Record<string, ToolHandler
 		},
 
 		async pause_recording() {
+			const client = await getClient();
 			return client.call("recording.pause");
 		},
 
 		async resume_recording() {
+			const client = await getClient();
 			return client.call("recording.resume");
 		},
 
 		async stop_recording() {
+			const client = await getClient();
 			const status = (await client.call("app.status")) as { recording: boolean };
 			if (!status.recording) {
 				throw new Error("No recording is currently active.");
@@ -46,26 +64,32 @@ export function buildToolHandlers(client: RpcClient): Record<string, ToolHandler
 		},
 
 		async get_recording_status() {
+			const client = await getClient();
 			return client.call("app.status");
 		},
 
 		async list_projects() {
+			const client = await getClient();
 			return client.call("project.list");
 		},
 
 		async read_project(args) {
+			const client = await getClient();
 			return client.call("project.read", { arg: args.filePath });
 		},
 
 		async open_editor() {
+			const client = await getClient();
 			return client.call("lifecycle.openEditor");
 		},
 
 		async get_project_state() {
+			const client = await getClient();
 			return client.call("editor.getState");
 		},
 
 		async add_zoom_region(args) {
+			const client = await getClient();
 			const focus =
 				typeof args.focusX === "number" && typeof args.focusY === "number"
 					? { cx: args.focusX, cy: args.focusY }
@@ -79,6 +103,7 @@ export function buildToolHandlers(client: RpcClient): Record<string, ToolHandler
 		},
 
 		async trim_clip(args) {
+			const client = await getClient();
 			return client.call("editor.trimClip", {
 				clipId: args.clipId,
 				startMs: args.startMs,
@@ -87,18 +112,22 @@ export function buildToolHandlers(client: RpcClient): Record<string, ToolHandler
 		},
 
 		async set_frame_style(args) {
+			const client = await getClient();
 			return client.call("editor.setFrameStyle", args);
 		},
 
 		async set_webcam_overlay(args) {
+			const client = await getClient();
 			return client.call("editor.setWebcamOverlay", args);
 		},
 
 		async add_annotation(args) {
+			const client = await getClient();
 			return client.call("editor.addAnnotation", args);
 		},
 
 		async generate_captions(args) {
+			const client = await getClient();
 			const whisperModelPath = path.join(getFramewrightDevUserDataPath(), "whisper", "ggml-small.bin");
 			if (!fs.existsSync(whisperModelPath)) {
 				throw new Error(
@@ -128,6 +157,7 @@ export function buildToolHandlers(client: RpcClient): Record<string, ToolHandler
 		},
 
 		async edit_caption(args) {
+			const client = await getClient();
 			return client.call("editor.editCaption", args);
 		},
 	};

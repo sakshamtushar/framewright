@@ -25,7 +25,7 @@ async function main() {
 	const client = await getOrCreateConnection({ repoDir: REPO_DIR, spawnTimeoutMs: 90_000 });
 	console.log("Connected.");
 
-	const handlers = buildToolHandlers(client);
+	const handlers = buildToolHandlers(() => Promise.resolve(client));
 	const recordedPaths = [];
 
 	try {

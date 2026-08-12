@@ -4,13 +4,29 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { getOrCreateConnection } from "./connection.js";
+import type { RpcClient } from "./rpcClient.js";
 import { buildToolHandlers } from "./tools.js";
 
 const REPO_DIR = path.resolve(fileURLToPath(import.meta.url), "../../..");
 
+// Lazily connects to (or launches) Framewright on the *first tool call*, not at
+// process startup — see the GetClient doc comment in tools.ts for why this matters.
+// Memoized so repeated tool calls in the same session reuse one connection; a
+// failed attempt clears the memo so the next tool call gets a fresh try instead
+// of permanently caching the rejection.
+let clientPromise: Promise<RpcClient> | null = null;
+function getClient(): Promise<RpcClient> {
+	if (!clientPromise) {
+		clientPromise = getOrCreateConnection({ repoDir: REPO_DIR }).catch((error: unknown) => {
+			clientPromise = null;
+			throw error;
+		});
+	}
+	return clientPromise;
+}
+
 async function main() {
-	const client = await getOrCreateConnection({ repoDir: REPO_DIR });
-	const handlers = buildToolHandlers(client);
+	const handlers = buildToolHandlers(getClient);
 
 	const server = new McpServer({ name: "framewright", version: "0.1.0" });
 

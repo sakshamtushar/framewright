@@ -13,16 +13,55 @@ function fakeClient(responses: Record<string, unknown>) {
 	} as unknown as import("./rpcClient.js").RpcClient;
 }
 
+describe("buildToolHandlers laziness", () => {
+	it("does not call getClient just from building the handlers map", () => {
+		const getClient = vi.fn(async () => fakeClient({}));
+		buildToolHandlers(getClient);
+		expect(getClient).not.toHaveBeenCalled();
+	});
+
+	it("calls getClient only once a handler actually runs", async () => {
+		const client = fakeClient({ "app.status": { recording: false, platform: "darwin" } });
+		const getClient = vi.fn(async () => client);
+		const handlers = buildToolHandlers(getClient);
+
+		expect(getClient).not.toHaveBeenCalled();
+		await handlers.get_app_status({});
+		expect(getClient).toHaveBeenCalledTimes(1);
+	});
+
+	it("reuses the same resolved client across multiple handler calls when getClient memoizes", async () => {
+		const client = fakeClient({
+			"app.status": { recording: false, platform: "darwin" },
+			"sources.list": [],
+		});
+		let resolveCount = 0;
+		const getClient = vi.fn(async () => {
+			resolveCount++;
+			return client;
+		});
+		const handlers = buildToolHandlers(getClient);
+
+		await handlers.get_app_status({});
+		await handlers.list_capture_sources({});
+
+		// buildToolHandlers itself doesn't memoize — that's getClient's job (see
+		// index.ts's real getClient) — so this just documents that each handler
+		// calls getClient exactly once per invocation, not more.
+		expect(resolveCount).toBe(2);
+	});
+});
+
 describe("buildToolHandlers", () => {
 	it("get_app_status calls app.status", async () => {
 		const client = fakeClient({ "app.status": { recording: false, platform: "darwin" } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		expect(await handlers.get_app_status({})).toEqual({ recording: false, platform: "darwin" });
 	});
 
 	it("list_capture_sources calls sources.list", async () => {
 		const client = fakeClient({ "sources.list": [{ id: "screen:0:0", name: "Screen 1" }] });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		expect(await handlers.list_capture_sources({})).toEqual([{ id: "screen:0:0", name: "Screen 1" }]);
 	});
 
@@ -31,7 +70,7 @@ describe("buildToolHandlers", () => {
 		Object.defineProperty(process, "platform", { value: "darwin" });
 		try {
 			const client = fakeClient({ "recording.startNative": { success: true } });
-			const handlers = buildToolHandlers(client);
+			const handlers = buildToolHandlers(() => Promise.resolve(client));
 			const result = await handlers.start_recording({ sourceId: "screen:0:0", sourceType: "screen" });
 			expect(result).toEqual({ success: true });
 			expect(client.call).toHaveBeenCalledWith("recording.startNative", {
@@ -47,7 +86,7 @@ describe("buildToolHandlers", () => {
 		Object.defineProperty(process, "platform", { value: "linux" });
 		try {
 			const client = fakeClient({ "recording.startFfmpeg": { success: true } });
-			const handlers = buildToolHandlers(client);
+			const handlers = buildToolHandlers(() => Promise.resolve(client));
 			await handlers.start_recording({ sourceId: "screen:0:0", sourceType: "screen" });
 			expect(client.call).toHaveBeenCalledWith("recording.startFfmpeg", {
 				arg: { id: "screen:0:0", sourceType: "screen" },
@@ -59,7 +98,7 @@ describe("buildToolHandlers", () => {
 
 	it("stop_recording throws a clear error when nothing is recording", async () => {
 		const client = fakeClient({ "app.status": { recording: false, platform: "darwin" } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		await expect(handlers.stop_recording({})).rejects.toThrow("No recording is currently active.");
 	});
 
@@ -67,7 +106,7 @@ describe("buildToolHandlers", () => {
 		const client = fakeClient({
 			"project.list": { success: true, projectsDir: "/tmp", entries: [] },
 		});
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		expect(await handlers.list_projects({})).toEqual({
 			success: true,
 			projectsDir: "/tmp",
@@ -77,27 +116,27 @@ describe("buildToolHandlers", () => {
 
 	it("read_project calls project.read with the given path", async () => {
 		const client = fakeClient({ "project.read": { success: true, projectData: {} } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		await handlers.read_project({ filePath: "/tmp/foo.recordly" });
 		expect(client.call).toHaveBeenCalledWith("project.read", { arg: "/tmp/foo.recordly" });
 	});
 
 	it("open_editor calls lifecycle.openEditor with no params", async () => {
 		const client = fakeClient({ "lifecycle.openEditor": undefined });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		await handlers.open_editor({});
 		expect(client.call).toHaveBeenCalledWith("lifecycle.openEditor");
 	});
 
 	it("get_project_state calls editor.getState", async () => {
 		const client = fakeClient({ "editor.getState": { zoomRegions: [] } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		expect(await handlers.get_project_state({})).toEqual({ zoomRegions: [] });
 	});
 
 	it("add_zoom_region forwards startMs/endMs/depth and combines focusX/focusY into a focus object", async () => {
 		const client = fakeClient({ "editor.addZoomRegion": { id: "zoom-1" } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		const result = await handlers.add_zoom_region({ startMs: 0, endMs: 1000, depth: 3, focusX: 0.3, focusY: 0.7 });
 		expect(result).toEqual({ id: "zoom-1" });
 		expect(client.call).toHaveBeenCalledWith("editor.addZoomRegion", {
@@ -110,7 +149,7 @@ describe("buildToolHandlers", () => {
 
 	it("add_zoom_region omits focus when focusX/focusY are not both provided", async () => {
 		const client = fakeClient({ "editor.addZoomRegion": { id: "zoom-2" } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		await handlers.add_zoom_region({ startMs: 0, endMs: 1000 });
 		expect(client.call).toHaveBeenCalledWith("editor.addZoomRegion", {
 			startMs: 0,
@@ -122,7 +161,7 @@ describe("buildToolHandlers", () => {
 
 	it("trim_clip calls editor.trimClip with clipId/startMs/endMs", async () => {
 		const client = fakeClient({ "editor.trimClip": { success: true } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		const result = await handlers.trim_clip({ clipId: "clip-1", startMs: 0, endMs: 5000 });
 		expect(result).toEqual({ success: true });
 		expect(client.call).toHaveBeenCalledWith("editor.trimClip", { clipId: "clip-1", startMs: 0, endMs: 5000 });
@@ -130,7 +169,7 @@ describe("buildToolHandlers", () => {
 
 	it("set_frame_style forwards args directly to editor.setFrameStyle", async () => {
 		const client = fakeClient({ "editor.setFrameStyle": { success: true } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		const result = await handlers.set_frame_style({ wallpaper: "gradient-1", borderRadius: 12 });
 		expect(result).toEqual({ success: true });
 		expect(client.call).toHaveBeenCalledWith("editor.setFrameStyle", { wallpaper: "gradient-1", borderRadius: 12 });
@@ -138,7 +177,7 @@ describe("buildToolHandlers", () => {
 
 	it("set_webcam_overlay forwards args directly to editor.setWebcamOverlay", async () => {
 		const client = fakeClient({ "editor.setWebcamOverlay": { success: true } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		const result = await handlers.set_webcam_overlay({ enabled: true, mirror: true });
 		expect(result).toEqual({ success: true });
 		expect(client.call).toHaveBeenCalledWith("editor.setWebcamOverlay", { enabled: true, mirror: true });
@@ -146,7 +185,7 @@ describe("buildToolHandlers", () => {
 
 	it("add_annotation forwards args directly to editor.addAnnotation", async () => {
 		const client = fakeClient({ "editor.addAnnotation": { id: "annotation-1" } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		const result = await handlers.add_annotation({ startMs: 0, endMs: 2000, content: "Hello" });
 		expect(result).toEqual({ id: "annotation-1" });
 		expect(client.call).toHaveBeenCalledWith("editor.addAnnotation", { startMs: 0, endMs: 2000, content: "Hello" });
@@ -163,7 +202,7 @@ describe("buildToolHandlers", () => {
 				"captions.generate": { success: true, cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }], message: "ok" },
 				"editor.setCaptions": { success: true, count: 1 },
 			});
-			const handlers = buildToolHandlers(client);
+			const handlers = buildToolHandlers(() => Promise.resolve(client));
 			const result = await handlers.generate_captions({ videoPath: "/tmp/video.mp4" });
 			expect(result).toEqual({ success: true, count: 1 });
 			expect(client.call).toHaveBeenCalledWith(
@@ -180,7 +219,7 @@ describe("buildToolHandlers", () => {
 			const client = fakeClient({
 				"captions.generate": { success: false, error: "model not found", message: "Failed to generate auto captions" },
 			});
-			const handlers = buildToolHandlers(client);
+			const handlers = buildToolHandlers(() => Promise.resolve(client));
 			await expect(handlers.generate_captions({ videoPath: "/tmp/video.mp4" })).rejects.toThrow();
 			expect(client.call).not.toHaveBeenCalledWith("editor.setCaptions", expect.anything());
 		});
@@ -188,7 +227,7 @@ describe("buildToolHandlers", () => {
 		it("throws an actionable error and never calls the RPC client when the Whisper model isn't downloaded", async () => {
 			vi.spyOn(fs, "existsSync").mockReturnValue(false);
 			const client = fakeClient({});
-			const handlers = buildToolHandlers(client);
+			const handlers = buildToolHandlers(() => Promise.resolve(client));
 			await expect(handlers.generate_captions({ videoPath: "/tmp/video.mp4" })).rejects.toThrow(
 				/Whisper caption model isn't downloaded/,
 			);
@@ -202,7 +241,7 @@ describe("buildToolHandlers", () => {
 				"captions.generate": { success: true, cues: [], message: "ok" },
 				"editor.setCaptions": { success: true, count: 0 },
 			});
-			const handlers = buildToolHandlers(client);
+			const handlers = buildToolHandlers(() => Promise.resolve(client));
 			await handlers.generate_captions({});
 			expect(client.call).toHaveBeenCalledWith(
 				"captions.generate",
@@ -213,14 +252,14 @@ describe("buildToolHandlers", () => {
 		it("throws when videoPath is omitted and no editor sourcePath is available", async () => {
 			vi.spyOn(fs, "existsSync").mockReturnValue(true);
 			const client = fakeClient({ "editor.getState": { sourcePath: null } });
-			const handlers = buildToolHandlers(client);
+			const handlers = buildToolHandlers(() => Promise.resolve(client));
 			await expect(handlers.generate_captions({})).rejects.toThrow(/no video is currently loaded/);
 		});
 	});
 
 	it("edit_caption forwards args directly to editor.editCaption", async () => {
 		const client = fakeClient({ "editor.editCaption": { success: true } });
-		const handlers = buildToolHandlers(client);
+		const handlers = buildToolHandlers(() => Promise.resolve(client));
 		const result = await handlers.edit_caption({ action: "delete", id: "c1" });
 		expect(result).toEqual({ success: true });
 		expect(client.call).toHaveBeenCalledWith("editor.editCaption", { action: "delete", id: "c1" });
