@@ -45,6 +45,11 @@ export function useVideoDevices(enabled: boolean = true) {
 					videoInputs.length > 0 && videoInputs.every((device) => !device.label.trim());
 
 				if (needsLabelPermission && !hasRequestedVideoLabels) {
+					// Set before the await, not after: two concurrent loadDevices() calls (e.g.
+					// devicechange firing while the initial load is still awaiting the permission
+					// prompt) would otherwise both see the flag unset and both trigger their own
+					// getUserMedia prompt/stream.
+					hasRequestedVideoLabels = true;
 					permissionStream = await navigator.mediaDevices.getUserMedia({
 						video: true,
 						audio: false,
@@ -57,7 +62,6 @@ export function useVideoDevices(enabled: boolean = true) {
 							label: device.label || `Camera ${index + 1}`,
 							groupId: device.groupId,
 						}));
-					hasRequestedVideoLabels = true;
 				}
 
 				if (mounted && loadId === activeLoadId) {

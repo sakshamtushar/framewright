@@ -213,10 +213,7 @@ export function resolveBrowserCaptureCursorPolicy({
 export function shouldUseNativeWindowsCaptureForSource(
 	source: Pick<ProcessedDesktopSource, "id"> | null | undefined,
 ): boolean {
-	return (
-		source?.id?.startsWith("screen:") === true ||
-		source?.id?.startsWith("window:") === true
-	);
+	return source?.id?.startsWith("screen:") === true || source?.id?.startsWith("window:") === true;
 }
 
 export function createProcessedMicrophoneConstraints(
@@ -2051,6 +2048,11 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			nativeWindowsRecording.current = false;
 			setRecording(false);
 			window.electronAPI?.setRecordingState(false);
+			// Native capture runs alongside a browser-side mic fallback recorder (and its own
+			// mic/mixing streams) that this branch previously left running — cleanupCapturedMedia
+			// stops the mic fallback MediaRecorder and releases all captured media tracks, the
+			// same cleanup the mediaRecorder branch below and normal stopRecording() already do.
+			cleanupCapturedMedia();
 			void (async () => {
 				try {
 					const result = await window.electronAPI.stopNativeScreenRecording();

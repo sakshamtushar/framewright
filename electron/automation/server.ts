@@ -19,13 +19,13 @@ interface RpcRequest {
 
 interface RpcSuccess {
 	jsonrpc: "2.0";
-	id: number | string;
+	id: number | string | null;
 	result: unknown;
 }
 
 interface RpcFailure {
 	jsonrpc: "2.0";
-	id: number | string;
+	id: number | string | null;
 	error: { code: number; message: string };
 }
 
@@ -69,11 +69,16 @@ async function callChannel(channel: string, params: Record<string, unknown>): Pr
 }
 
 export async function dispatchRpcRequest(request: RpcRequest): Promise<RpcResponse> {
+	// Normalize once: an undefined/malformed id would otherwise silently vanish from the
+	// JSON response (JSON.stringify omits undefined-valued keys), leaving a client with
+	// no id at all to correlate the reply to, instead of a response it can at least see
+	// carries a null id.
+	const id = request.id ?? null;
 	try {
 		if (request.method === "app.status") {
 			return {
 				jsonrpc: "2.0",
-				id: request.id,
+				id,
 				result: { recording: isRecording(), platform: process.platform },
 			};
 		}
@@ -91,24 +96,24 @@ export async function dispatchRpcRequest(request: RpcRequest): Promise<RpcRespon
 		const editorBridgeType = EDITOR_BRIDGE_METHODS[request.method];
 		if (editorBridgeType) {
 			const result = await requestEditorState(editorBridgeType, request.params ?? {});
-			return { jsonrpc: "2.0", id: request.id, result };
+			return { jsonrpc: "2.0", id, result };
 		}
 
 		const channel = METHOD_TO_CHANNEL[request.method];
 		if (!channel) {
 			return {
 				jsonrpc: "2.0",
-				id: request.id,
+				id,
 				error: { code: -32601, message: `Unknown method: ${request.method}` },
 			};
 		}
 
 		const result = await callChannel(channel, request.params ?? {});
-		return { jsonrpc: "2.0", id: request.id, result };
+		return { jsonrpc: "2.0", id, result };
 	} catch (error) {
 		return {
 			jsonrpc: "2.0",
-			id: request.id,
+			id,
 			error: {
 				code: -32000,
 				message: error instanceof Error ? error.message : String(error),
@@ -142,8 +147,22 @@ export async function startAutomationServerIfRequested(): Promise<void> {
 			let request: RpcRequest;
 			try {
 				request = JSON.parse(data.toString());
-			} catch {
-				return; // ignore malformed frames
+			} catch (error) {
+				// Malformed frame: no request id to correlate a normal error response to,
+				// so reply with a JSON-RPC parse-error using id: null (per the JSON-RPC 2.0
+				// spec convention) instead of leaving the caller to rely purely on its own
+				// timeout to notice something went wrong.
+				socket.send(
+					JSON.stringify({
+						jsonrpc: "2.0",
+						id: null,
+						error: {
+							code: -32700,
+							message: `Parse error: ${error instanceof Error ? error.message : String(error)}`,
+						},
+					}),
+				);
+				return;
 			}
 			const response = await dispatchRpcRequest(request);
 			socket.send(JSON.stringify(response));

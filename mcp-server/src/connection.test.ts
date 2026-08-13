@@ -2,10 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 
 const mockReadLockfile = vi.fn();
 const mockIsFramewrightProcess = vi.fn();
+const mockTryClaimSpawn = vi.fn();
+const mockClearSpawnMarker = vi.fn();
 
 vi.mock("./lockfile.js", () => ({
 	readLockfile: () => mockReadLockfile(),
 	isFramewrightProcess: (pid: number, repoDir?: string) => mockIsFramewrightProcess(pid, repoDir),
+	tryClaimSpawn: (debounceMs: number) => mockTryClaimSpawn(debounceMs),
+	clearSpawnMarker: () => mockClearSpawnMarker(),
 }));
 
 vi.mock("./rpcClient.js", () => ({
@@ -54,6 +58,10 @@ describe("getOrCreateConnection", () => {
 		mockSpawn.mockClear();
 		mockReadLockfile.mockReset();
 		mockIsFramewrightProcess.mockReset();
+		mockTryClaimSpawn.mockReset();
+		mockTryClaimSpawn.mockResolvedValue(true);
+		mockClearSpawnMarker.mockReset();
+		mockClearSpawnMarker.mockResolvedValue(undefined);
 
 		mockReadLockfile.mockResolvedValue({ pid: 111, port: 5000, token: "tok" });
 		mockIsFramewrightProcess.mockResolvedValue(true);
@@ -73,6 +81,10 @@ describe("getOrCreateConnection", () => {
 		mockSpawn.mockClear();
 		mockReadLockfile.mockReset();
 		mockIsFramewrightProcess.mockReset();
+		mockTryClaimSpawn.mockReset();
+		mockTryClaimSpawn.mockResolvedValue(true);
+		mockClearSpawnMarker.mockReset();
+		mockClearSpawnMarker.mockResolvedValue(undefined);
 
 		mockReadLockfile.mockResolvedValue({ pid: 999, port: 5001, token: "tok-repo" });
 		mockIsFramewrightProcess.mockResolvedValue(true);
@@ -90,11 +102,12 @@ describe("getOrCreateConnection", () => {
 		mockSpawn.mockClear();
 		mockReadLockfile.mockReset();
 		mockIsFramewrightProcess.mockReset();
+		mockTryClaimSpawn.mockReset();
+		mockTryClaimSpawn.mockResolvedValue(true);
+		mockClearSpawnMarker.mockReset();
+		mockClearSpawnMarker.mockResolvedValue(undefined);
 
-		setupMocks(
-			[null, { pid: 1000, port: 5002, token: "tok-repo2" }],
-			[false, true],
-		);
+		setupMocks([null, { pid: 1000, port: 5002, token: "tok-repo2" }], [false, true]);
 
 		await getOrCreateConnection({
 			repoDir: "/Users/someone/my-fork",
@@ -109,12 +122,13 @@ describe("getOrCreateConnection", () => {
 		mockSpawn.mockClear();
 		mockReadLockfile.mockReset();
 		mockIsFramewrightProcess.mockReset();
+		mockTryClaimSpawn.mockReset();
+		mockTryClaimSpawn.mockResolvedValue(true);
+		mockClearSpawnMarker.mockReset();
+		mockClearSpawnMarker.mockResolvedValue(undefined);
 
 		// First call: no lockfile. After spawn, lockfile appears.
-		setupMocks(
-			[null, { pid: 222, port: 6000, token: "tok2" }],
-			[false, true],
-		);
+		setupMocks([null, { pid: 222, port: 6000, token: "tok2" }], [false, true]);
 
 		const client = await getOrCreateConnection({
 			repoDir: "/repo",
@@ -131,12 +145,13 @@ describe("getOrCreateConnection", () => {
 		mockSpawn.mockClear();
 		mockReadLockfile.mockReset();
 		mockIsFramewrightProcess.mockReset();
+		mockTryClaimSpawn.mockReset();
+		mockTryClaimSpawn.mockResolvedValue(true);
+		mockClearSpawnMarker.mockReset();
+		mockClearSpawnMarker.mockResolvedValue(undefined);
 
 		// First call: lockfile missing then appears.
-		setupMocks(
-			[null, { pid: 333, port: 7000, token: "tok3" }],
-			[false, true],
-		);
+		setupMocks([null, { pid: 333, port: 7000, token: "tok3" }], [false, true]);
 
 		const first = await getOrCreateConnection({
 			repoDir: "/repo",
@@ -163,6 +178,10 @@ describe("getOrCreateConnection", () => {
 		mockSpawn.mockClear();
 		mockReadLockfile.mockReset();
 		mockIsFramewrightProcess.mockReset();
+		mockTryClaimSpawn.mockReset();
+		mockTryClaimSpawn.mockResolvedValue(true);
+		mockClearSpawnMarker.mockReset();
+		mockClearSpawnMarker.mockResolvedValue(undefined);
 
 		// Initial check sees stale lockfile (PID not Framewright), then post-spawn sees fresh.
 		setupMocks(
@@ -183,16 +202,17 @@ describe("getOrCreateConnection", () => {
 		expect(client).toEqual({ port: 9000, token: "fresh" });
 	});
 
-	it("clears the debounce once a live lockfile is observed, so re-launch after close works", async () => {
+	it("clears the debounce marker once a live lockfile is observed, so re-launch after close works", async () => {
 		mockSpawn.mockClear();
 		mockReadLockfile.mockReset();
 		mockIsFramewrightProcess.mockReset();
+		mockTryClaimSpawn.mockReset();
+		mockTryClaimSpawn.mockResolvedValue(true);
+		mockClearSpawnMarker.mockReset();
+		mockClearSpawnMarker.mockResolvedValue(undefined);
 
 		// First launch: spawn + lockfile appears.
-		setupMocks(
-			[null, { pid: 666, port: 10000, token: "tok6" }],
-			[false, true],
-		);
+		setupMocks([null, { pid: 666, port: 10000, token: "tok6" }], [false, true]);
 		await getOrCreateConnection({
 			repoDir: "/repo",
 			spawnTimeoutMs: SHORT_TIMEOUT_MS,
@@ -215,14 +235,22 @@ describe("getOrCreateConnection", () => {
 		});
 
 		expect(mockSpawn).toHaveBeenCalledTimes(2);
+		// Marker is cleared only on a successful spawn — twice here, once per launch.
+		expect(mockClearSpawnMarker).toHaveBeenCalledTimes(2);
 	});
 
 	it("suppresses spawn attempts during the debounce window when the app hasn't appeared yet", async () => {
 		mockSpawn.mockClear();
 		mockReadLockfile.mockReset();
 		mockIsFramewrightProcess.mockReset();
+		mockTryClaimSpawn.mockReset();
+		mockClearSpawnMarker.mockReset();
+		mockClearSpawnMarker.mockResolvedValue(undefined);
 
-		// First call: lockfile never appears, spawn times out.
+		// First call: claims the spawn marker, but the lockfile never appears, so the
+		// spawn times out — the marker is deliberately left in place (see spawnAppAndWait's
+		// comment) so a tight retry loop can't keep spawning.
+		mockTryClaimSpawn.mockResolvedValueOnce(true);
 		setupMocks([null], [false]);
 		await expect(
 			getOrCreateConnection({
@@ -234,8 +262,10 @@ describe("getOrCreateConnection", () => {
 
 		expect(mockSpawn).toHaveBeenCalledTimes(1);
 
-		// Second call immediately after — within debounce window. Should NOT spawn again.
-		// Lockfile appears mid-poll, so we return a client.
+		// Second call immediately after — within debounce window, so tryClaimSpawn reports
+		// the marker is still held and getOrCreateConnection should NOT spawn again, just
+		// wait for the in-flight spawn's lockfile to appear.
+		mockTryClaimSpawn.mockResolvedValueOnce(false);
 		mockReadLockfile.mockResolvedValueOnce(null); // first poll: nothing yet
 		mockReadLockfile.mockResolvedValue({ pid: 888, port: 12000, token: "tok8" }); // subsequent polls: live
 		mockIsFramewrightProcess.mockResolvedValueOnce(false);

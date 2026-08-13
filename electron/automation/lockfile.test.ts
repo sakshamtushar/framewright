@@ -31,10 +31,18 @@ describe("automation lockfile", () => {
 		expect(JSON.parse(raw)).toEqual({ pid: 123, port: 4567, token: "abc" });
 	});
 
-	it("removes the lockfile", async () => {
-		await writeLockfile({ pid: 123, port: 4567, token: "abc" });
+	it("removes the lockfile when it identifies this process", async () => {
+		await writeLockfile({ pid: process.pid, port: 4567, token: "abc" });
 		await removeLockfile();
 		await expect(fs.access(getLockfilePath())).rejects.toThrow();
+	});
+
+	it("does not remove a lockfile that identifies a different process", async () => {
+		// A different (and, for the test, definitely-not-us) pid — simulates a lockfile a
+		// different Framewright instance has since written, e.g. after a rapid restart.
+		await writeLockfile({ pid: process.pid + 1, port: 4567, token: "abc" });
+		await removeLockfile();
+		await expect(fs.access(getLockfilePath())).resolves.toBeUndefined();
 	});
 
 	it("removeLockfile does not throw when no lockfile exists", async () => {

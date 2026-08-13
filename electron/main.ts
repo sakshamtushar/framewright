@@ -6,6 +6,7 @@ import {
 	BrowserWindow,
 	desktopCapturer,
 	dialog,
+	webContents as electronWebContents,
 	ipcMain,
 	Menu,
 	Notification,
@@ -14,9 +15,9 @@ import {
 	shell,
 	systemPreferences,
 	Tray,
-	webContents as electronWebContents,
 } from "electron";
 import { RECORDINGS_DIR } from "./appPaths";
+import { startAutomationServerIfRequested } from "./automation/server";
 import { showCursor } from "./cursorHider";
 import { registerExtensionIpcHandlers } from "./extensions/extensionIpc";
 import { getGpuSwitches } from "./gpuSwitches";
@@ -27,14 +28,10 @@ import {
 	killWindowsCaptureProcess,
 	registerIpcHandlers,
 } from "./ipc/handlers";
-import { startAutomationServerIfRequested } from "./automation/server";
 import { ensureMediaServer } from "./mediaServer";
+import { hardenWebContentsNavigation, shouldHardenWebContentsType } from "./navigationPolicy";
 import { shouldGrantDisplayCapture, shouldGrantMediaPermission } from "./permissionPolicy";
 import { ensurePackagedRendererServer, getPackagedRendererBaseUrl } from "./rendererServer";
-import {
-	hardenWebContentsNavigation,
-	shouldHardenWebContentsType,
-} from "./navigationPolicy";
 import type { UpdateToastPayload } from "./updater";
 import {
 	checkForAppUpdates,
@@ -399,10 +396,19 @@ function sendEditorMenuAction(
 		targetWindow = mainWindow;
 		if (!targetWindow || targetWindow.isDestroyed()) return;
 
-		targetWindow.webContents.once("did-finish-load", () => {
-			if (!targetWindow || targetWindow.isDestroyed()) return;
+		// createEditorWindowWrapper() can return an *existing*, already-loaded editor
+		// window (it reuses one instead of creating a new one when possible) — in that
+		// case webContents has already fired "did-finish-load" and never will again, so
+		// waiting for it here would silently drop the menu action instead of sending it.
+		if (targetWindow.webContents.isLoading()) {
+			const readyWindow = targetWindow;
+			readyWindow.webContents.once("did-finish-load", () => {
+				if (readyWindow.isDestroyed()) return;
+				readyWindow.webContents.send(channel);
+			});
+		} else {
 			targetWindow.webContents.send(channel);
-		});
+		}
 		return;
 	}
 

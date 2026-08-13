@@ -12,6 +12,7 @@ vi.mock("electron", () => ({
 	},
 	ipcMain: {
 		handle: vi.fn(),
+		setMaxListeners: vi.fn(),
 	},
 	BrowserWindow: {
 		getAllWindows: vi.fn(() => []),
@@ -26,8 +27,8 @@ vi.mock("electron", () => ({
 	},
 }));
 
-import { ipcHandlerRegistry } from "../ipc/registry";
 import { registerProjectHandlers } from "../ipc/register/project";
+import { ipcHandlerRegistry } from "../ipc/registry";
 import * as editorBridge from "./editorBridge";
 import { dispatchRpcRequest } from "./server";
 
@@ -118,7 +119,9 @@ describe("dispatchRpcRequest", () => {
 	});
 
 	it("editor.getState calls requestEditorState with the request's params as payload", async () => {
-		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ zoomRegions: [] });
+		const spy = vi
+			.spyOn(editorBridge, "requestEditorState")
+			.mockResolvedValue({ zoomRegions: [] });
 
 		const response = await dispatchRpcRequest({
 			jsonrpc: "2.0",
@@ -133,7 +136,9 @@ describe("dispatchRpcRequest", () => {
 	});
 
 	it("editor.addZoomRegion forwards params directly as the payload (not wrapped in arg)", async () => {
-		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ id: "zoom-1" });
+		const spy = vi
+			.spyOn(editorBridge, "requestEditorState")
+			.mockResolvedValue({ id: "zoom-1" });
 
 		const response = await dispatchRpcRequest({
 			jsonrpc: "2.0",
@@ -148,7 +153,9 @@ describe("dispatchRpcRequest", () => {
 	});
 
 	it("editor.getState returns a JSON-RPC error envelope when the editor bridge rejects", async () => {
-		const spy = vi.spyOn(editorBridge, "requestEditorState").mockRejectedValue(new Error("No editor window is open."));
+		const spy = vi
+			.spyOn(editorBridge, "requestEditorState")
+			.mockRejectedValue(new Error("No editor window is open."));
 
 		const response = await dispatchRpcRequest({
 			jsonrpc: "2.0",
@@ -179,7 +186,9 @@ describe("dispatchRpcRequest", () => {
 	});
 
 	it("editor.trimClip forwards params directly as the payload", async () => {
-		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ success: true });
+		const spy = vi
+			.spyOn(editorBridge, "requestEditorState")
+			.mockResolvedValue({ success: true });
 
 		const response = await dispatchRpcRequest({
 			jsonrpc: "2.0",
@@ -194,7 +203,9 @@ describe("dispatchRpcRequest", () => {
 	});
 
 	it("editor.setFrameStyle forwards params directly as the payload", async () => {
-		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ success: true });
+		const spy = vi
+			.spyOn(editorBridge, "requestEditorState")
+			.mockResolvedValue({ success: true });
 
 		const response = await dispatchRpcRequest({
 			jsonrpc: "2.0",
@@ -203,13 +214,18 @@ describe("dispatchRpcRequest", () => {
 			params: { wallpaper: "gradient-1", borderRadius: 12 },
 		});
 
-		expect(spy).toHaveBeenCalledWith("setFrameStyle", { wallpaper: "gradient-1", borderRadius: 12 });
+		expect(spy).toHaveBeenCalledWith("setFrameStyle", {
+			wallpaper: "gradient-1",
+			borderRadius: 12,
+		});
 		expect(response).toEqual({ jsonrpc: "2.0", id: 21, result: { success: true } });
 		spy.mockRestore();
 	});
 
 	it("editor.setWebcamOverlay forwards params directly as the payload", async () => {
-		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ success: true });
+		const spy = vi
+			.spyOn(editorBridge, "requestEditorState")
+			.mockResolvedValue({ success: true });
 		const response = await dispatchRpcRequest({
 			jsonrpc: "2.0",
 			id: 30,
@@ -222,33 +238,45 @@ describe("dispatchRpcRequest", () => {
 	});
 
 	it("editor.addAnnotation forwards params directly as the payload", async () => {
-		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ id: "annotation-1" });
+		const spy = vi
+			.spyOn(editorBridge, "requestEditorState")
+			.mockResolvedValue({ id: "annotation-1" });
 		const response = await dispatchRpcRequest({
 			jsonrpc: "2.0",
 			id: 31,
 			method: "editor.addAnnotation",
 			params: { startMs: 0, endMs: 2000, content: "Hello" },
 		});
-		expect(spy).toHaveBeenCalledWith("addAnnotation", { startMs: 0, endMs: 2000, content: "Hello" });
+		expect(spy).toHaveBeenCalledWith("addAnnotation", {
+			startMs: 0,
+			endMs: 2000,
+			content: "Hello",
+		});
 		expect(response).toEqual({ jsonrpc: "2.0", id: 31, result: { id: "annotation-1" } });
 		spy.mockRestore();
 	});
 
 	it("editor.setCaptions forwards params directly as the payload", async () => {
-		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ success: true, count: 2 });
+		const spy = vi
+			.spyOn(editorBridge, "requestEditorState")
+			.mockResolvedValue({ success: true, count: 2 });
 		const response = await dispatchRpcRequest({
 			jsonrpc: "2.0",
 			id: 41,
 			method: "editor.setCaptions",
 			params: { cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }] },
 		});
-		expect(spy).toHaveBeenCalledWith("setCaptions", { cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }] });
+		expect(spy).toHaveBeenCalledWith("setCaptions", {
+			cues: [{ id: "c1", startMs: 0, endMs: 500, text: "Hi" }],
+		});
 		expect(response).toEqual({ jsonrpc: "2.0", id: 41, result: { success: true, count: 2 } });
 		spy.mockRestore();
 	});
 
 	it("editor.editCaption forwards params directly as the payload", async () => {
-		const spy = vi.spyOn(editorBridge, "requestEditorState").mockResolvedValue({ success: true });
+		const spy = vi
+			.spyOn(editorBridge, "requestEditorState")
+			.mockResolvedValue({ success: true });
 		const response = await dispatchRpcRequest({
 			jsonrpc: "2.0",
 			id: 42,
@@ -282,7 +310,10 @@ describe("dispatchRpcRequest", () => {
 				success: true,
 				cues: [],
 				message: "ok",
-				receivedOptions: { videoPath: "/tmp/video.mp4", whisperModelPath: "/tmp/model.bin" },
+				receivedOptions: {
+					videoPath: "/tmp/video.mp4",
+					whisperModelPath: "/tmp/model.bin",
+				},
 			},
 		});
 	});

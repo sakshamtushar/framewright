@@ -30,8 +30,11 @@ async function main() {
 
 	const server = new McpServer({ name: "framewright", version: "0.1.0" });
 
-	server.tool("get_app_status", "Get whether Framewright is currently recording and its platform.", {}, async () =>
-		toContent(await handlers.get_app_status({})),
+	server.tool(
+		"get_app_status",
+		"Get whether Framewright is currently recording and its platform.",
+		{},
+		async () => toContent(await handlers.get_app_status({})),
 	);
 
 	server.tool(
@@ -60,16 +63,22 @@ async function main() {
 		toContent(await handlers.resume_recording({})),
 	);
 
-	server.tool("stop_recording", "Stop the active recording and finalize the video file.", {}, async () =>
-		toContent(await handlers.stop_recording({})),
+	server.tool(
+		"stop_recording",
+		"Stop the active recording and finalize the video file.",
+		{},
+		async () => toContent(await handlers.stop_recording({})),
 	);
 
 	server.tool("get_recording_status", "Get current recording status.", {}, async () =>
 		toContent(await handlers.get_recording_status({})),
 	);
 
-	server.tool("list_projects", "List saved .framewright (or legacy .recordly) project files.", {}, async () =>
-		toContent(await handlers.list_projects({})),
+	server.tool(
+		"list_projects",
+		"List saved .framewright (or legacy .recordly) project files.",
+		{},
+		async () => toContent(await handlers.list_projects({})),
 	);
 
 	server.tool(
@@ -214,7 +223,11 @@ async function main() {
 }
 
 function toContent(value: unknown) {
-	return { content: [{ type: "text" as const, text: JSON.stringify(value) }] };
+	// JSON.stringify(undefined) returns the JS value undefined, not the string "undefined"
+	// — several handlers (e.g. open_editor) legitimately resolve to undefined, which would
+	// otherwise produce a content block whose `text` field violates the MCP schema (it
+	// must be a string).
+	return { content: [{ type: "text" as const, text: JSON.stringify(value ?? null) }] };
 }
 
 main().catch((error) => {

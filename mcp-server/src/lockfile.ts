@@ -1,7 +1,8 @@
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
+import path from "node:path";
 import { promisify } from "node:util";
-import { getLockfilePath } from "./paths.js";
+import { getLockfilePath, getSpawnMarkerPath } from "./paths.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -28,6 +29,60 @@ export async function readLockfile(): Promise<AutomationLockfile | null> {
 	} catch {
 		return null;
 	}
+}
+
+/**
+ * Cross-process spawn debounce, backed by an atomically-created marker file (see
+ * `getSpawnMarkerPath`'s doc comment for why an in-memory flag isn't enough).
+ *
+ * Returns `true` if this call successfully claimed the right to spawn `npm run dev`
+ * (no other process has an unexpired claim) — the caller should proceed to spawn.
+ * Returns `false` if another process already holds an unexpired claim — the caller
+ * should wait for that in-flight spawn instead of starting a second one.
+ *
+ * `{ flag: "wx" }` is an atomic exclusive-create: it fails with ENOENT-adjacent
+ * EEXIST if the file already exists, so two processes racing to claim can't both
+ * succeed.
+ */
+export async function tryClaimSpawn(debounceMs: number): Promise<boolean> {
+	const markerPath = getSpawnMarkerPath();
+	const claim = { pid: process.pid, claimedAt: Date.now() };
+	await fs.mkdir(path.dirname(markerPath), { recursive: true });
+	try {
+		await fs.writeFile(markerPath, JSON.stringify(claim), { flag: "wx" });
+		return true;
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+			// Unexpected write failure (e.g. missing parent dir) — don't block spawning
+			// on a debounce mechanism that can't function; behave as if unclaimed.
+			return true;
+		}
+	}
+
+	// Marker exists — check whether it's expired or corrupt, in which case we can
+	// reclaim it ourselves rather than waiting out a stale window forever.
+	try {
+		const raw = await fs.readFile(markerPath, "utf8");
+		const parsed = JSON.parse(raw);
+		const claimedAt = typeof parsed?.claimedAt === "number" ? parsed.claimedAt : 0;
+		if (Date.now() - claimedAt < debounceMs) {
+			return false;
+		}
+	} catch {
+		// Corrupt/unreadable marker — treat as expired and reclaim below.
+	}
+
+	try {
+		await fs.writeFile(markerPath, JSON.stringify(claim));
+		return true;
+	} catch {
+		// Couldn't reclaim — fall back to treating the marker as still held.
+		return false;
+	}
+}
+
+export async function clearSpawnMarker(): Promise<void> {
+	await fs.rm(getSpawnMarkerPath(), { force: true });
 }
 
 export function isProcessAlive(pid: number): boolean {
@@ -88,8 +143,13 @@ export async function isFramewrightProcess(pid: number, repoDir?: string): Promi
 	try {
 		cmdline = await getProcessCommandLine(pid);
 	} catch {
-		// Be permissive: process exists, can't introspect, treat as alive.
-		return true;
+		// The lookup can fail either because we genuinely can't introspect a live process
+		// (permissions, sandboxing) or because the process died between the isProcessAlive
+		// check above and this lookup running. Re-check liveness to tell those apart rather
+		// than assuming "alive" for both — the latter would otherwise attach to a dead
+		// port/token and hang every subsequent call for the full RPC timeout instead of
+		// triggering a respawn.
+		return isProcessAlive(pid);
 	}
 
 	if (cmdline === null) return true;
@@ -100,11 +160,9 @@ async function getProcessCommandLine(pid: number): Promise<string | null> {
 	const timeout = COMMAND_LINE_LOOKUP_TIMEOUT_MS;
 
 	if (process.platform === "darwin") {
-		const { stdout } = await execFileAsync(
-			"ps",
-			["-p", String(pid), "-o", "command="],
-			{ timeout },
-		);
+		const { stdout } = await execFileAsync("ps", ["-p", String(pid), "-o", "command="], {
+			timeout,
+		});
 		return stdout.trim() || null;
 	}
 
@@ -114,11 +172,9 @@ async function getProcessCommandLine(pid: number): Promise<string | null> {
 			const normalized = raw.replace(/\0/g, " ").trim();
 			return normalized || null;
 		} catch {
-			const { stdout } = await execFileAsync(
-				"ps",
-				["-p", String(pid), "-o", "args="],
-				{ timeout },
-			);
+			const { stdout } = await execFileAsync("ps", ["-p", String(pid), "-o", "args="], {
+				timeout,
+			});
 			return stdout.trim() || null;
 		}
 	}

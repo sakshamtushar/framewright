@@ -3,11 +3,25 @@ import { BrowserWindow, ipcMain } from "electron";
 
 const REQUEST_TIMEOUT_MS = 10_000;
 
+// Each in-flight requestEditorState call holds one listener on this shared channel until
+// it resolves or times out. Legitimate concurrent editor.* automation calls (e.g. a batch
+// of MCP tool calls) are expected to exceed Node's default cap of 10 and shouldn't log a
+// MaxListenersExceededWarning for doing so — this is bounded by REQUEST_TIMEOUT_MS, not
+// unbounded growth.
+ipcMain.setMaxListeners(100);
+
 function getEditorWindow(): Electron.BrowserWindow | null {
 	return (
-		BrowserWindow.getAllWindows().find(
-			(window) => !window.isDestroyed() && window.webContents.getURL().includes("windowType=editor"),
-		) ?? null
+		BrowserWindow.getAllWindows().find((window) => {
+			if (window.isDestroyed()) return false;
+			try {
+				return (
+					new URL(window.webContents.getURL()).searchParams.get("windowType") === "editor"
+				);
+			} catch {
+				return false;
+			}
+		}) ?? null
 	);
 }
 
@@ -31,7 +45,11 @@ export async function requestEditorState(type: string, payload: unknown): Promis
 			reject(new Error(`Editor did not respond to "${type}" within ${REQUEST_TIMEOUT_MS}ms`));
 		}, REQUEST_TIMEOUT_MS);
 
-		function onResponse(_event: Electron.IpcMainEvent, responseId: string, response: EditorResponse) {
+		function onResponse(
+			_event: Electron.IpcMainEvent,
+			responseId: string,
+			response: EditorResponse,
+		) {
 			if (responseId !== requestId) {
 				return;
 			}
